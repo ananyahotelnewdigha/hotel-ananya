@@ -1,118 +1,209 @@
-import { MapPin, Phone, Mail, Send, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, Phone, Mail, Send, Clock, CheckCircle2, Instagram, Facebook, Twitter, ExternalLink } from 'lucide-react';
+
+const contactInfo = [
+    {
+        icon: MapPin, label: 'Location',
+        lines: ['New Digha, West Bengal - 721428'],
+        action: { text: 'View on Maps', href: 'https://goo.gl/maps/Yrsjyiv6ivuG2Hko7' },
+        color: 'text-rose-500 bg-rose-50'
+    },
+    {
+        icon: Phone, label: 'Call Us',
+        lines: ['+91 74071 75567', '+91 98765 43210'],
+        action: { text: 'WhatsApp Us', href: 'https://wa.me/917407175567' },
+        color: 'text-emerald-500 bg-emerald-50'
+    },
+    {
+        icon: Mail, label: 'Email',
+        lines: ['hello@ananyahotel.com', 'bookings@ananyahotel.com'],
+        color: 'text-blue-500 bg-blue-50'
+    },
+    {
+        icon: Clock, label: 'Hours',
+        lines: ['Reception: Open 24/7', 'Check-in: 12:00 PM | Out: 11:00 AM'],
+        color: 'text-amber-500 bg-amber-50'
+    },
+];
+
+const SUBJECTS = ['Room Booking Inquiry', 'Restaurant Reservation', 'Special Event / Wedding', 'Spa Appointment', 'General Support', 'Feedback'];
 
 const Contact = () => {
+    const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', subject: SUBJECTS[0], message: '' });
+    const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        await new Promise(r => setTimeout(r, 1000));
+        setSubmitted(true);
+        setLoading(false);
+    };
+
+    const handleChange = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+
     return (
-        <div className="pt-0 pb-20 bg-cream min-h-screen">
-            <div className="section-container">
-                <header className="mb-16 text-center">
-                    <h1 className="text-4xl md:text-6xl font-serif mb-4">Get In <span className="text-primary italic">Touch</span></h1>
-                    <p className="opacity-70 font-light">We are here to help you plan your perfect getaway.</p>
-                </header>
+        <div className="min-h-screen bg-slate-50 pb-6 md:pb-10">
+            {/* Dark Hero Header */}
+            <div className="relative bg-secondary overflow-hidden">
+                <div className="absolute inset-0 opacity-10"
+                    style={{ backgroundImage: 'radial-gradient(circle at 10% 90%, #c9a84c 0%, transparent 40%), radial-gradient(circle at 90% 10%, #c9a84c 0%, transparent 40%)' }} />
+                <div className="relative z-10 px-6 pt-8 pb-1">
+                    <span className="text-primary text-[8px] font-black uppercase tracking-[0.5em]">We're Here</span>
+                    <h1 className="text-3xl font-serif text-white mt-2 lowercase leading-tight">
+                        Get in <span className="text-primary italic">Touch.</span>
+                    </h1>
+                    <p className="text-white/50 text-xs mt-3 font-medium leading-relaxed max-w-sm">
+                        Our guest relations team is ready to help you plan your perfect getaway — 24 hours a day, 7 days a week.
+                    </p>
+                </div>
+            </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                    {/* Contact Info */}
-                    <div className="space-y-12">
-                        <div className="space-y-8">
-                            <h2 className="text-3xl font-serif text-secondary lowercase capitalize">Contact Information</h2>
-                            <p className="text-slate-500 font-light leading-relaxed">
-                                Feel free to reach out to us for bookings, inquiries, or any special requests.
-                                Our team is available 24/7 to assist you.
-                            </p>
-                        </div>
-
-                        <div className="space-y-6">
-                            <div className="flex items-start space-x-6">
-                                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
-                                    <MapPin size={24} />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-secondary uppercase text-xs tracking-widest mb-1">Our Location</h4>
-                                    <p className="text-sm text-slate-500">New Digha, Digha, West Bengal - 721428</p>
-                                    <a href="https://goo.gl/maps/Yrsjyiv6ivuG2Hko7" target="_blank" className="text-primary text-[10px] font-bold uppercase tracking-widest hover:underline mt-2 inline-block">View on Google Maps</a>
-                                </div>
+            <div className="px-4 max-w-3xl mx-auto space-y-4">
+                {/* Contact Info Cards Grid */}
+                <div className="grid grid-cols-2 gap-3 -mt-1">
+                    {contactInfo.map(({ icon: Icon, label, lines, action, color }) => (
+                        <div key={label} className="bg-white rounded-2xl shadow-xl border border-slate-100 p-4 space-y-3">
+                            <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center`}>
+                                <Icon size={18} />
                             </div>
-
-                            <div className="flex items-start space-x-6">
-                                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
-                                    <Phone size={24} />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-secondary uppercase text-xs tracking-widest mb-1">Call Us</h4>
-                                    <p className="text-sm text-slate-500">+91 74071 75567</p>
-                                    <p className="text-sm text-slate-500">+91 98765 43210 (Support)</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start space-x-6">
-                                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
-                                    <Mail size={24} />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-secondary uppercase text-xs tracking-widest mb-1">Email Us</h4>
-                                    <p className="text-sm text-slate-500">hello@ananyahotel.com</p>
-                                    <p className="text-sm text-slate-500">bookings@ananyahotel.com</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start space-x-6">
-                                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary flex-shrink-0">
-                                    <Clock size={24} />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-secondary uppercase text-xs tracking-widest mb-1">Reception Hours</h4>
-                                    <p className="text-sm text-slate-500">Open 24 Hours / 7 Days a week</p>
-                                    <p className="text-sm text-slate-500">Check-in: 12:00 PM | Check-out: 11:00 AM</p>
-                                </div>
+                            <div>
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+                                {lines.map(l => <p key={l} className="text-secondary text-xs font-medium mt-0.5">{l}</p>)}
+                                {action && (
+                                    <a href={action.href} target="_blank" rel="noreferrer"
+                                        className="inline-flex items-center gap-1 text-primary text-[9px] font-black uppercase tracking-widest mt-2 hover:underline">
+                                        {action.text} <ExternalLink size={9} />
+                                    </a>
+                                )}
                             </div>
                         </div>
+                    ))}
+                </div>
+
+                {/* Contact Form */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    {/* Form Header */}
+                    <div className="bg-secondary px-6 py-5">
+                        <p className="text-primary text-[8px] font-black uppercase tracking-[0.4em]">Send a Message</p>
+                        <h2 className="text-white font-serif text-lg mt-0.5">We'll respond within 24 hrs</h2>
                     </div>
 
-                    {/* Contact Form */}
-                    <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-slate-100">
-                        <form className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">First Name</label>
-                                    <input type="text" className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm" placeholder="John" />
+                    <div className="p-6">
+                        {submitted ? (
+                            <div className="py-10 text-center space-y-4">
+                                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                                    <CheckCircle2 size={32} className="text-emerald-600" />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Last Name</label>
-                                    <input type="text" className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm" placeholder="Doe" />
+                                    <h3 className="text-secondary font-serif text-xl">Message Sent!</h3>
+                                    <p className="text-slate-400 text-sm mt-2">Thank you, <strong>{form.firstName}</strong>. Our team will reach out to you shortly.</p>
                                 </div>
+                                <button onClick={() => { setSubmitted(false); setForm({ firstName: '', lastName: '', email: '', phone: '', subject: SUBJECTS[0], message: '' }); }}
+                                    className="px-6 py-3 bg-secondary text-white rounded-xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all">
+                                    Send Another
+                                </button>
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Email Address</label>
-                                <input type="email" className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm" placeholder="john@example.com" />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Subject</label>
-                                <select className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm cursor-pointer appearance-none">
-                                    <option>Room Booking Inquiry</option>
-                                    <option>Restaurant Reservation</option>
-                                    <option>Special Event / Wedding</option>
-                                    <option>General Support</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Message</label>
-                                <textarea rows="4" className="w-full bg-slate-50 border-0 p-4 rounded-xl focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm" placeholder="How can we help you?"></textarea>
-                            </div>
-                            <button type="submit" className="w-full btn-premium flex items-center justify-center space-x-2">
-                                <span>Send Message</span>
-                                <Send size={18} />
-                            </button>
-                        </form>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                {/* Name Row */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { field: 'firstName', label: 'First Name', placeholder: 'Aryan' },
+                                        { field: 'lastName', label: 'Last Name', placeholder: 'Pathak' },
+                                    ].map(({ field, label, placeholder }) => (
+                                        <div key={field} className="space-y-1.5">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</label>
+                                            <input type="text" required value={form[field]}
+                                                onChange={e => handleChange(field, e.target.value)}
+                                                placeholder={placeholder}
+                                                className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-3 py-3 rounded-xl outline-none transition-all text-secondary font-medium"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Email & Phone */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Email</label>
+                                        <input type="email" required value={form.email}
+                                            onChange={e => handleChange('email', e.target.value)}
+                                            placeholder="your@email.com"
+                                            className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-3 py-3 rounded-xl outline-none transition-all text-secondary font-medium"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Phone</label>
+                                        <input type="tel" value={form.phone}
+                                            onChange={e => handleChange('phone', e.target.value)}
+                                            placeholder="+91 XXXXX XXXXX"
+                                            className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-3 py-3 rounded-xl outline-none transition-all text-secondary font-medium"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Subject */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Subject</label>
+                                    <select value={form.subject}
+                                        onChange={e => handleChange('subject', e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-3 py-3 rounded-xl outline-none transition-all text-secondary font-medium appearance-none cursor-pointer">
+                                        {SUBJECTS.map(s => <option key={s}>{s}</option>)}
+                                    </select>
+                                </div>
+
+                                {/* Message */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Message</label>
+                                    <textarea rows={4} required value={form.message}
+                                        onChange={e => handleChange('message', e.target.value)}
+                                        placeholder="Tell us how we can help you..."
+                                        className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-3 py-3 rounded-xl outline-none transition-all text-secondary font-medium resize-none"
+                                    />
+                                </div>
+
+                                <button type="submit" disabled={loading}
+                                    className={`w-full flex items-center justify-center gap-3 py-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all
+                                        ${loading ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-secondary text-white shadow-xl shadow-secondary/20 hover:bg-primary active:scale-95'}`}>
+                                    {loading ? (
+                                        <span className="flex items-center gap-2">
+                                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Sending...
+                                        </span>
+                                    ) : (
+                                        <><Send size={16} /> Send Message</>
+                                    )}
+                                </button>
+                            </form>
+                        )}
                     </div>
                 </div>
 
-                {/* Map Embed */}
-                <div className="mt-20 h-[450px] bg-slate-200 rounded-3xl overflow-hidden shadow-2xl relative">
+                {/* Map */}
+                <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-100 h-56">
                     <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3701.3533230635465!2d87.5029377!3d21.6214309!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a0327f2c8d23d8b%3A0x47e812d8a0c23945!2sAnanya%20Hotel!5e0!3m2!1sen!2sin!4v1657891234567!5m2!1sen!2sin"
-                        className="w-full h-full border-0 grayscale hover:grayscale-0 transition-all duration-500"
-                        allowFullScreen=""
-                        loading="lazy"
-                    ></iframe>
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3701.3533230635465!2d87.5029377!3d21.6214309!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a0327f2c8d23d8b%3A0x47e812d8a0c23945!2sAnanya%20Hotel!5e0!3m2!1sen!2sin!4v1657891234567"
+                        className="w-full h-full border-0 grayscale hover:grayscale-0 transition-all duration-700"
+                        allowFullScreen loading="lazy"
+                    />
+                </div>
+
+                {/* Social Links */}
+                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-center justify-between">
+                    <div>
+                        <p className="text-[9px] font-black text-primary uppercase tracking-widest">Follow Us</p>
+                        <p className="text-secondary font-bold text-sm mt-0.5">Stay connected with Ananya</p>
+                    </div>
+                    <div className="flex gap-3">
+                        {[Instagram, Facebook, Twitter].map((Icon, i) => (
+                            <button key={i}
+                                className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all active:scale-90">
+                                <Icon size={18} />
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
@@ -120,3 +211,4 @@ const Contact = () => {
 };
 
 export default Contact;
+

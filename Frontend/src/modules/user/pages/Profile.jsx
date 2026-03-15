@@ -1,99 +1,146 @@
 import { useAuth } from '../../../context/AuthContext';
 import { useWallet } from '../../../context/WalletContext';
-import { User, Mail, Shield, LogOut, Settings, CreditCard, History, ChevronRight } from 'lucide-react';
+import { User, Mail, Shield, LogOut, Settings, CreditCard, History, ChevronRight, Star, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
     const { user, logout } = useAuth();
-    const { balance } = useWallet();
+    const { balance, transactions } = useWallet();
     const navigate = useNavigate();
 
     if (!user) {
         return (
-            <div className="pt-32 pb-20 bg-cream min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-xl font-bold mb-4">Please log in to view your profile</h2>
-                    <button onClick={() => navigate('/login')} className="btn-premium">Login Now</button>
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+                <div className="bg-white rounded-2xl shadow-xl p-10 text-center space-y-4 max-w-sm w-full">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                        <User size={28} className="text-slate-400" />
+                    </div>
+                    <h2 className="text-xl font-serif text-secondary">Please Sign In</h2>
+                    <p className="text-slate-400 text-sm">Access your profile and bookings by signing in.</p>
+                    <button onClick={() => navigate('/login')}
+                        className="w-full bg-secondary text-white py-4 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                        Sign In Now
+                    </button>
                 </div>
             </div>
         );
     }
 
+    const stats = [
+        { label: 'Bookings', value: transactions.filter(t => t.type === 'debit').length },
+        { label: 'Wallet', value: `₹${balance.toLocaleString()}` },
+        { label: 'Rating', value: '4.9' },
+    ];
+
     const menuItems = [
-        { name: 'My Bookings', icon: History, path: '/profile/bookings' },
-        { name: 'Wallet Settings', icon: CreditCard, path: '/wallet' },
-        { name: 'Account Details', icon: Settings, path: '/profile/details' },
+        { name: 'My Bookings', desc: 'View your stays & history', icon: History, path: '/profile/bookings', color: 'text-purple-500 bg-purple-50' },
+        { name: 'Wallet', desc: 'Balance & transactions', icon: CreditCard, path: '/wallet', color: 'text-emerald-500 bg-emerald-50' },
+        { name: 'Account Details', desc: 'Edit your profile info', icon: Settings, path: '/profile/details', color: 'text-blue-500 bg-blue-50' },
     ];
 
     return (
-        <div className="pt-0 pb-20 bg-cream min-h-screen">
-            <div className="section-container max-w-2xl">
-                {/* Profile Header */}
-                <div className="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-slate-100 mb-8">
-                    <div className="bg-primary h-32 relative">
-                        <div className="absolute -bottom-12 left-8 p-1 bg-white rounded-3xl shadow-lg">
-                            <div className="w-24 h-24 bg-slate-100 rounded-2xl flex items-center justify-center text-primary font-serif text-3xl font-bold border-2 border-slate-50">
+        <div className="min-h-screen bg-slate-50 pb-6 md:pb-10">
+            {/* Hero Profile Card */}
+            <div className="relative bg-secondary overflow-hidden">
+                {/* Background pattern */}
+                <div className="absolute inset-0 opacity-10"
+                    style={{ backgroundImage: 'radial-gradient(circle at 10% 90%, #c9a84c 0%, transparent 40%), radial-gradient(circle at 90% 10%, #c9a84c 0%, transparent 40%)' }} />
+
+                <div className="relative z-10 px-6 pt-12 pb-20">
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                            {/* Avatar */}
+                            <div className="w-16 h-16 bg-primary/20 border-2 border-primary/40 rounded-2xl flex items-center justify-center text-white font-serif text-2xl font-black">
                                 {user.name[0]}
                             </div>
-                        </div>
-                    </div>
-                    <div className="pt-16 pb-8 px-8 flex justify-between items-end">
-                        <div>
-                            <h1 className="text-2xl font-bold text-secondary">{user.name}</h1>
-                            <div className="flex items-center space-x-2 text-slate-400 text-sm mt-1">
-                                <Mail size={14} />
-                                <span>{user.email}</span>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <span className="inline-flex items-center px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest mb-2">
-                                <Shield size={10} className="mr-1" /> {user.role}
-                            </span>
-                            <p className="text-2xl font-black text-secondary">₹{balance.toLocaleString()}</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Dashboard Menu */}
-                <div className="space-y-4">
-                    {menuItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                            <button
-                                key={item.name}
-                                onClick={() => item.path !== '#' && navigate(item.path)}
-                                className="w-full bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between hover:border-primary/50 hover:shadow-md transition-all group"
-                            >
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-secondary group-hover:bg-primary group-hover:text-white transition-colors">
-                                        <Icon size={20} />
-                                    </div>
-                                    <span className="font-bold text-secondary">{item.name}</span>
+                            <div>
+                                <h1 className="text-white font-bold text-xl">{user.name}</h1>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <Shield size={11} className="text-primary" />
+                                    <span className="text-primary text-[9px] font-black uppercase tracking-widest">{user.role} Member</span>
                                 </div>
-                                <ChevronRight size={20} className="text-slate-300 group-hover:text-primary" />
-                            </button>
-                        );
-                    })}
-
-                    <button
-                        onClick={() => {
-                            logout();
-                            navigate('/login');
-                        }}
-                        className="w-full bg-red-50 p-6 rounded-2xl border border-red-100 flex items-center justify-between group hover:bg-red-100 transition-all mt-8"
-                    >
-                        <div className="flex items-center space-x-4 text-red-600">
-                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-                                <LogOut size={20} />
+                                <div className="flex items-center gap-1 mt-1">
+                                    <Mail size={10} className="text-white/50" />
+                                    <span className="text-white/50 text-[9px]">{user.email}</span>
+                                </div>
                             </div>
-                            <span className="font-bold">Sign Out</span>
                         </div>
-                        <ChevronRight size={20} className="text-red-300" />
-                    </button>
+                        <div className="flex items-center gap-1 bg-primary/10 border border-primary/20 rounded-lg px-2 py-1">
+                            <Star size={10} className="text-primary" fill="currentColor" />
+                            <span className="text-primary text-[9px] font-black">Premium</span>
+                        </div>
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-3 gap-3 mt-8 bg-white/5 border border-white/10 rounded-2xl p-4">
+                        {stats.map(({ label, value }) => (
+                            <div key={label} className="text-center">
+                                <p className="text-white font-black text-lg">{value}</p>
+                                <p className="text-white/40 text-[8px] font-bold uppercase tracking-widest mt-0.5">{label}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
+            </div>
+
+            {/* Menu below hero */}
+            <div className="px-4 -mt-10 relative z-10 space-y-3">
+                {/* Loyalty Card */}
+                <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-5 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-10 -mt-10" />
+                    <div className="relative z-10 flex items-center justify-between">
+                        <div>
+                            <p className="text-[8px] font-black text-primary uppercase tracking-widest">Ananya Loyalty</p>
+                            <p className="text-secondary font-serif text-base mt-0.5">Gold Tier Member</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            {[1, 2, 3].map(i => <Star key={i} size={14} fill="currentColor" className="text-amber-400" />)}
+                        </div>
+                    </div>
+                    <div className="mt-3 flex items-center gap-1.5">
+                        <MapPin size={10} className="text-slate-400" />
+                        <span className="text-[9px] text-slate-400 font-medium">Digha, West Bengal</span>
+                    </div>
+                </div>
+
+                {/* Menu Items */}
+                {menuItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                        <button key={item.name} onClick={() => navigate(item.path)}
+                            className="w-full bg-white rounded-2xl border border-slate-100 shadow-sm p-5 flex items-center justify-between hover:border-primary/30 hover:shadow-md transition-all group active:scale-[0.99]">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-11 h-11 ${item.color} rounded-xl flex items-center justify-center`}>
+                                    <Icon size={20} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-bold text-secondary text-sm">{item.name}</p>
+                                    <p className="text-slate-400 text-[10px] mt-0.5">{item.desc}</p>
+                                </div>
+                            </div>
+                            <ChevronRight size={18} className="text-slate-300 group-hover:text-primary transition-colors" />
+                        </button>
+                    );
+                })}
+
+                {/* Logout */}
+                <button onClick={() => { logout(); navigate('/login'); }}
+                    className="w-full bg-red-50 rounded-2xl border border-red-100 p-5 flex items-center justify-between hover:bg-red-100 transition-all group active:scale-[0.99]">
+                    <div className="flex items-center gap-4 text-red-500">
+                        <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center border border-red-100">
+                            <LogOut size={18} />
+                        </div>
+                        <div className="text-left">
+                            <p className="font-bold text-sm">Sign Out</p>
+                            <p className="text-red-400 text-[10px] mt-0.5">See you soon!</p>
+                        </div>
+                    </div>
+                    <ChevronRight size={18} className="text-red-300" />
+                </button>
             </div>
         </div>
     );
 };
 
 export default Profile;
+

@@ -11,11 +11,12 @@ const HomeHeader = () => {
         <div className="md:hidden sticky top-0 bg-white/95 backdrop-blur-xl z-50 border-b border-slate-100 px-4 py-3 shadow-sm">
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-serif text-lg italic">a</div>
-                    <div>
-                        <p className="text-[10px] font-black tracking-widest text-secondary uppercase leading-none">Ananya</p>
-                        <p className="text-[8px] font-bold text-primary tracking-widest uppercase">Luxury Hotels</p>
-                    </div>
+                    <img
+                        src="/logo.png"
+                        alt="Ananya"
+                        className="h-10 w-auto object-contain cursor-pointer"
+                        onClick={() => navigate('/')}
+                    />
                 </div>
                 <div className="flex items-center space-x-2">
                     <button
@@ -43,14 +44,24 @@ const HomeHeader = () => {
                 </div>
             </div>
             {/* App Search Bar */}
-            <div className="relative group">
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    const query = e.target.search.value;
+                    if (query.trim()) {
+                        navigate('/rooms', { state: { initialSearch: query } });
+                    }
+                }}
+                className="relative group"
+            >
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={14} />
                 <input
+                    name="search"
                     type="text"
                     placeholder="Search experiences, dining, suites..."
                     className="w-full bg-slate-100/80 border-transparent border focus:border-primary/20 focus:bg-white text-xs pl-10 pr-4 py-2.5 rounded-lg outline-none transition-all placeholder:text-slate-400 font-medium"
                 />
-            </div>
+            </form>
         </div>
     );
 };

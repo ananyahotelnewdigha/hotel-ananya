@@ -20,6 +20,7 @@ import MyBookings from './modules/user/pages/MyBookings';
 import AccountDetails from './modules/user/pages/AccountDetails';
 import BookingFlow from './modules/user/pages/BookingFlow';
 import Dashboard from './modules/admin/pages/Dashboard';
+import AdminLogin from './modules/admin/pages/AdminLogin';
 import RoomMgmt from './modules/admin/pages/RoomMgmt';
 import Bookings from './modules/admin/pages/Bookings';
 import Users from './modules/admin/pages/Users';
@@ -30,7 +31,7 @@ import Transactions from './modules/admin/pages/Transactions';
 const AdminRoute = ({ children }) => {
   const { role, loading } = useAuth();
   if (loading) return <div>Loading...</div>;
-  return role === 'admin' ? children : <Navigate to="/login" />;
+  return role === 'admin' ? children : <Navigate to="/admin/login" />;
 };
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
             </Route>
 
             {/* Admin Module */}
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin"
               element={

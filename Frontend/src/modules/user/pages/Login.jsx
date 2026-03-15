@@ -1,110 +1,145 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { Mail, Lock, LogIn, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, LogIn, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+
+const DEMO_ACCOUNTS = [
+    { label: 'Guest', email: 'user@ananya.com', password: 'user123', role: 'user' },
+];
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPass, setShowPass] = useState(false);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
+        await new Promise(r => setTimeout(r, 600));
 
-        // Simple mock login logic
-        if (email === 'admin@ananya.com' && password === 'admin123') {
-            login({ name: 'System Admin', email, role: 'admin' });
-            navigate('/admin');
-        } else if (email === 'user@ananya.com' && password === 'user123') {
+        if (email === 'user@ananya.com' && password === 'user123') {
             login({ name: 'Guest User', email, role: 'user' });
             navigate('/');
+        } else if (email === 'admin@ananya.com') {
+            setError('This is the Guest Login. Please use the Admin Portal for staff access.');
         } else {
-            setError('Invalid credentials. Use admin@ananya.com / admin123 or user@ananya.com / user123');
+            setError('Invalid credentials. If you are new, please create an account.');
         }
+        setLoading(false);
     };
 
     return (
-        <div className="min-h-screen pt-12 bg-cream flex items-center justify-center px-4">
-            <div className="max-w-md w-full">
-                <div className="bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100">
-                    <div className="bg-primary p-8 text-white text-center">
-                        <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
-                            <ShieldCheck size={32} />
+        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-12">
+            {/* Brand */}
+            <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-serif text-xl italic shadow-lg shadow-primary/30">a</div>
+                <div>
+                    <p className="text-[9px] font-black tracking-[0.4em] text-secondary uppercase">Ananya</p>
+                    <p className="text-[7px] font-bold text-primary tracking-widest uppercase">Luxury Hotels</p>
+                </div>
+            </div>
+
+            <div className="w-full max-w-md">
+                <div className="bg-white rounded-3xl shadow-2xl shadow-slate-200 border border-slate-100 overflow-hidden">
+                    {/* Header Banner */}
+                    <div className="relative bg-secondary px-8 pt-8 pb-12 text-center overflow-hidden">
+                        <div className="absolute inset-0 opacity-10"
+                            style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, #c9a84c 0%, transparent 50%), radial-gradient(circle at 80% 20%, #c9a84c 0%, transparent 50%)' }} />
+                        <div className="relative z-10">
+                            <div className="w-16 h-16 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <ShieldCheck size={30} className="text-primary" />
+                            </div>
+                            <h1 className="text-2xl font-serif text-white">Welcome Back</h1>
+                            <p className="text-white/60 text-xs mt-1 font-medium">Sign in to your Ananya account</p>
                         </div>
-                        <h1 className="text-2xl font-serif">Welcome Back</h1>
-                        <p className="text-white/70 text-sm mt-1">Access your Ananya Hotel account</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                        {error && (
-                            <div className="bg-red-50 text-red-600 text-xs p-4 rounded-xl font-bold border border-red-100">
-                                {error}
-                            </div>
-                        )}
-
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm"
-                                    placeholder="your@email.com"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Password</label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                                <input
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none transition-all text-sm"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-
-                        <button type="submit" className="w-full btn-premium flex items-center justify-center space-x-2 py-4">
-                            <span>Sign In</span>
-                            <LogIn size={18} />
-                        </button>
-
-                        <div className="text-center space-y-4">
-                            <p className="text-xs text-slate-500">
-                                Don't have an account? <Link to="/signup" className="text-primary font-bold hover:underline">Get Started</Link>
-                            </p>
-                            <div className="pt-4 border-t border-slate-50">
-                                <p className="text-[10px] uppercase font-black text-slate-300 tracking-[0.2em] mb-3">Dev Access</p>
-                                <div className="flex flex-col gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => { setEmail('admin@ananya.com'); setPassword('admin123'); }}
-                                        className="text-[10px] bg-secondary text-white py-2 rounded-lg font-bold hover:bg-primary transition-colors"
-                                    >
-                                        Auto-fill Admin (admin@ananya.com)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => { setEmail('user@ananya.com'); setPassword('user123'); }}
-                                        className="text-[10px] border py-2 rounded-lg font-bold text-slate-400 hover:border-primary hover:text-primary transition-all"
-                                    >
-                                        Auto-fill User
-                                    </button>
+                    <div className="px-8 -mt-6 pb-8">
+                        {/* Card body lifts over banner */}
+                        <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 mb-6 space-y-5">
+                            {error && (
+                                <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-xl font-medium flex items-start gap-2">
+                                    <span className="mt-0.5">⚠</span> {error}
                                 </div>
+                            )}
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                {/* Email */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                        <Mail size={10} className="text-primary" /> Email Address
+                                    </label>
+                                    <input
+                                        type="email" required value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        placeholder="your@email.com"
+                                        className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-4 py-3.5 rounded-xl outline-none transition-all text-secondary font-medium"
+                                    />
+                                </div>
+                                {/* Password */}
+                                <div className="space-y-1.5">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                        <Lock size={10} className="text-primary" /> Password
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showPass ? 'text' : 'password'} required value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-4 py-3.5 pr-12 rounded-xl outline-none transition-all text-secondary font-medium"
+                                        />
+                                        <button type="button" onClick={() => setShowPass(!showPass)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-secondary transition-colors">
+                                            {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button type="submit" disabled={loading}
+                                    className={`w-full flex items-center justify-center gap-3 py-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-lg
+                                        ${loading ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-secondary text-white shadow-secondary/20 hover:bg-primary active:scale-95'}`}>
+                                    {loading ? (
+                                        <span className="flex items-center gap-2">
+                                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Signing In...
+                                        </span>
+                                    ) : (
+                                        <><LogIn size={18} /> Sign In</>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Demo Quick Fill */}
+                        <div className="space-y-3">
+                            <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] text-center">Demo Accounts</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                {DEMO_ACCOUNTS.map(acc => (
+                                    <button key={acc.label}
+                                        type="button"
+                                        onClick={() => { setEmail(acc.email); setPassword(acc.password); }}
+                                        className="py-3 px-4 bg-slate-50 border border-slate-200 rounded-xl text-left hover:border-primary/40 hover:bg-white transition-all group active:scale-95">
+                                        <p className="text-[8px] font-black text-primary uppercase tracking-widest">{acc.label}</p>
+                                        <p className="text-[9px] text-secondary font-medium truncate mt-0.5">{acc.email}</p>
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                    </form>
+
+                        <p className="text-center text-xs text-slate-400 mt-6">
+                            Don't have an account?{' '}
+                            <Link to="/signup" className="text-primary font-bold hover:underline">Create one</Link>
+                        </p>
+
+                        <p className="text-center text-[10px] text-slate-300 mt-8 pb-4">
+                            Are you a staff member?{' '}
+                            <Link to="/admin/login" className="text-secondary font-bold hover:text-primary transition-colors">Staff Portal</Link>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -112,3 +147,4 @@ const Login = () => {
 };
 
 export default Login;
+
