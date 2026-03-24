@@ -145,6 +145,23 @@ router.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (user && (await user.matchPassword(password))) {
+            // ADMIN BYPASS: No OTP for admins
+            if (user.role === 'admin') {
+                return res.json({
+                    success: true,
+                    message: 'Admin login successful',
+                    user: {
+                        _id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        mobile: user.mobile,
+                        role: user.role,
+                        profilePicture: user.profilePicture,
+                        token: generateToken(user._id)
+                    }
+                });
+            }
+
             const otp = getGeneratedOtp();
             user.otp = otp;
             await user.save();

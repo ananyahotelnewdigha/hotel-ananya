@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
                 return { otpRequired: true, email: data.email, mobile: data.mobile };
             }
 
-            const userData = { ...data, token: data.token };
+            const userData = data.user || data;
             setUser(userData);
             setRole(userData.role || 'user');
             localStorage.setItem('hotel_user', JSON.stringify(userData));

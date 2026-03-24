@@ -14,17 +14,12 @@ const createAdmin = async () => {
 
         const existingAdmin = await User.findOne({ email });
         if (existingAdmin) {
-            existingAdmin.password = password; // Hashing done by middleware
-            existingAdmin.role = 'admin';
-            existingAdmin.mobile = '0000000000';
-            existingAdmin.city = 'Digha';
-            existingAdmin.country = 'India';
-            existingAdmin.isVerified = true;
+            existingAdmin.name = 'Hotel Ananya Admin';
             await existingAdmin.save();
             console.log('Admin password updated for a@gmail.com');
         } else {
             await User.create({
-                name: 'Super Admin',
+                name: 'Hotel Ananya Admin',
                 email,
                 password, // Hashing done by middleware
                 role: 'admin',

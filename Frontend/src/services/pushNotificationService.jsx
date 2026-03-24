@@ -58,7 +58,9 @@ export const setupForegroundListener = () => {
             const notificationOptions = {
                 body: payload.notification.body,
                 icon: '/logo.png', // Logo fixed
-                data: payload.data
+                data: payload.data,
+                tag: payload.fcmOptions?.link || 'hotel-ananya-sync', // Unique tag for de-duplication
+                renotify: true // Still notify user if new content arrives with same tag
             };
 
             // Trigger standard OS notification

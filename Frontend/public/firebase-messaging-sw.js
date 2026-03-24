@@ -21,7 +21,9 @@ messaging.onBackgroundMessage((payload) => {
         body: payload.notification.body,
         icon: '/logo.png', // Logo path fixed to use your public logo.png
         data: payload.data,
-        vibrate: [200, 100, 200]
+        vibrate: [200, 100, 200],
+        tag: payload.notification.title || 'ananya-sync-notif', // Unique tag for de-duplication
+        renotify: true // Sound/vibrate on each new update with the same title
     };
 
     return self.registration.showNotification(notificationTitle, notificationOptions);

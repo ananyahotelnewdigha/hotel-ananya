@@ -21,7 +21,7 @@ const FeaturedStays = () => {
                 {roomCategories.map((room, i) => (
                     <div
                         key={i}
-                        onClick={() => navigate('/book', { state: { room } })}
+                        onClick={() => navigate('/rooms', { state: { initialSearch: room.type } })}
                         className="flex-shrink-0 w-[75vw] bg-white rounded-xl border border-slate-100 shadow-md overflow-hidden snap-center group cursor-pointer active:scale-95 transition-all"
                     >
                         <div className="relative h-40 overflow-hidden">
@@ -45,7 +45,7 @@ const FeaturedStays = () => {
                             <div className="flex items-center justify-between">
                                 <p className="text-primary font-bold text-lg">₹{room.price}<span className="text-[8px] text-slate-400 font-normal uppercase ml-1">/ Night</span></p>
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); navigate('/book', { state: { room } }); }}
+                                    onClick={(e) => { e.stopPropagation(); navigate('/rooms', { state: { initialSearch: room.type } }); }}
                                     className="bg-secondary text-white text-[8px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest active:scale-90 transition-all shadow-sm"
                                 >
                                     Book
