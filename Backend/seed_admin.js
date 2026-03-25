@@ -7,32 +7,32 @@ dotenv.config();
 const seedAdmin = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
-        console.log('Connected to MongoDB');
+        console.log('Connected to MongoDB:', mongoose.connection.name);
 
-        // Check if admin already exists
-        const existing = await User.findOne({ email: 'admin@hotelananya.com' });
-        if (existing) {
-            console.log('Admin already exists:', existing.email);
-            process.exit();
-        }
-
-        const admin = await User.create({
+        // Create or update admin
+        const adminData = {
             name: 'Hotel Ananya Admin',
-            email: 'admin@hotelananya.com',
-            password: 'Admin@1234',
+            email: 'a@gmail.com',
+            password: '1234',
             role: 'admin',
-            mobile: '9000000000',
+            mobile: '9669002380',
             country: 'India',
             city: 'Digha',
             isVerified: true,
             walletBalance: 0
-        });
+        };
 
-        console.log('✅ Admin created successfully!');
-        console.log('-------------------------');
-        console.log('  Email   : admin@hotelananya.com');
-        console.log('  Password: Admin@1234');
-        console.log('-------------------------');
+        let admin = await User.findOne({ email: 'a@gmail.com' });
+        if (!admin) {
+            admin = new User(adminData);
+        } else {
+            Object.assign(admin, adminData);
+        }
+
+        admin.password = '1234'; // Trigger pre-save hash
+        await admin.save();
+
+        console.log('✅ Admin account seeded: a@gmail.com / 1234');
         process.exit();
     } catch (error) {
         console.error('Error creating admin:', error.message);

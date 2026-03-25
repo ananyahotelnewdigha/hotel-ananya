@@ -145,11 +145,11 @@ router.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (user && (await user.matchPassword(password))) {
-            // ADMIN BYPASS: No OTP for admins
-            if (user.role === 'admin') {
+            // BYPASS OTP for admins and special test user
+            if (user.role === 'admin' || user.email === 'b@gmail.com') {
                 return res.json({
                     success: true,
-                    message: 'Admin login successful',
+                    message: `${user.role === 'admin' ? 'Admin' : 'Test'} login successful`,
                     user: {
                         _id: user._id,
                         name: user.name,

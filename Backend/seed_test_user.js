@@ -9,31 +9,34 @@ const seedUser = async () => {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('Connected to MongoDB');
 
-        // Check if test user exists
-        const userExists = await User.findOne({ email: 'user@hotelananya.com' });
-        if (userExists) {
-            await User.deleteOne({ email: 'user@hotelananya.com' });
-            console.log('Existing test user removed');
-        }
-
-        // Create a premium test user
-        const testUser = await User.create({
-            name: 'Aryan Pathak',
-            email: 'user@hotelananya.com',
-            password: 'User@1234',
+        // Create or update user
+        const userData = {
+            name: 'Aryan User',
+            email: 'b@gmail.com',
+            password: '123456',
             role: 'user',
-            mobile: '+91 99887 76655',
+            mobile: '9669002380',
             city: 'Kolkata',
             country: 'India',
-            walletBalance: 25000, // Enough for multiple bookings
+            walletBalance: 50000,
             isVerified: true
-        });
+        };
 
-        console.log('\n✅ Test User created successfully!');
+        let user = await User.findOne({ email: 'b@gmail.com' });
+        if (!user) {
+            user = new User(userData);
+        } else {
+            Object.assign(user, userData);
+        }
+
+        user.password = '123456'; // Trigger pre-save hashing
+        await user.save();
+
+        console.log('\n✅ Live User created successfully!');
         console.log('-------------------------');
-        console.log(`  Email   : ${testUser.email}`);
-        console.log('  Password: User@1234');
-        console.log('  Wallet  : ₹25,000');
+        console.log('  Email   : b@gmail.com');
+        console.log('  Password: 123456');
+        console.log('  Wallet  : ₹50,000');
         console.log('-------------------------\n');
 
         process.exit();

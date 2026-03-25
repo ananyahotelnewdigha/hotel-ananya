@@ -15,8 +15,9 @@ const createAdmin = async () => {
         const existingAdmin = await User.findOne({ email });
         if (existingAdmin) {
             existingAdmin.name = 'Hotel Ananya Admin';
+            existingAdmin.password = '1234'; // Actually update password
             await existingAdmin.save();
-            console.log('Admin password updated for a@gmail.com');
+            console.log('Admin password updated successfully for a@gmail.com');
         } else {
             await User.create({
                 name: 'Hotel Ananya Admin',
