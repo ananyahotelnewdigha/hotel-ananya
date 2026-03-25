@@ -30,6 +30,27 @@ const Signup = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+
+        // Numeric validation for mobile field
+        if (name === 'mobile') {
+            const numericValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+            setFormData(prev => ({
+                ...prev,
+                [name]: numericValue
+            }));
+            return;
+        }
+
+        // Name validation for name field (alphabets and spaces only)
+        if (name === 'name' || name === 'city' || name === 'country') {
+            const alphaValue = value.replace(/[^a-zA-Z\s]/g, '');
+            setFormData(prev => ({
+                ...prev,
+                [name]: alphaValue
+            }));
+            return;
+        }
+
         setFormData(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value
@@ -40,7 +61,7 @@ const Signup = () => {
         if (s === 1) {
             if (!formData.name.trim()) { alert("Please enter your full name"); return false; }
             if (!formData.email.trim()) { alert("Please enter a valid email address"); return false; }
-            if (!formData.mobile.trim()) { alert("Please provide your mobile number"); return false; }
+            if (formData.mobile.length !== 10) { alert("Mobile number must be exactly 10 digits"); return false; }
         }
         if (s === 2) {
             if (!formData.password) { alert("Please set a security password"); return false; }
@@ -126,7 +147,7 @@ const Signup = () => {
                                 <Phone size={10} className="text-primary" /> Mobile Number
                             </label>
                             <input type="tel" name="mobile" required value={formData.mobile} onChange={handleChange}
-                                placeholder="+91 00000 00000"
+                                placeholder="10-digit number" maxLength={10}
                                 className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-4 py-3.5 rounded-xl outline-none transition-all text-secondary font-medium"
                             />
                         </div>

@@ -45,6 +45,7 @@ const Contact = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (form.phone.length !== 10) return alert("Mobile number must be exactly 10 digits");
         setLoading(true);
         try {
             await api.post('/messages', {
@@ -60,7 +61,19 @@ const Contact = () => {
         }
     };
 
-    const handleChange = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
+    const handleChange = (f, v) => {
+        if (f === 'phone') {
+            const numericValue = v.replace(/[^0-9]/g, '').slice(0, 10);
+            setForm(prev => ({ ...prev, [f]: numericValue }));
+            return;
+        }
+        if (f === 'firstName' || f === 'lastName') {
+            const alphaValue = v.replace(/[^a-zA-Z\s]/g, '');
+            setForm(prev => ({ ...prev, [f]: alphaValue }));
+            return;
+        }
+        setForm(prev => ({ ...prev, [f]: v }));
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 pb-6 md:pb-10">
@@ -157,7 +170,8 @@ const Contact = () => {
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Phone</label>
                                         <input type="tel" value={form.phone}
                                             onChange={e => handleChange('phone', e.target.value)}
-                                            placeholder="+91 XXXXX XXXXX"
+                                            placeholder="10-digit number"
+                                            maxLength={10}
                                             className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-3 py-3 rounded-xl outline-none transition-all text-secondary font-medium"
                                         />
                                     </div>

@@ -28,6 +28,7 @@ const Users = () => {
 
     const handleAddStaff = async (e) => {
         e.preventDefault();
+        if (newStaff.mobile.length !== 10) return alert("Mobile number must be exactly 10 digits");
         try {
             await api.post('/auth/register', newStaff);
             fetchUsers();
@@ -105,12 +106,13 @@ const Users = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-bold uppercase text-slate-400">Full Name</label>
-                                    <input required value={newStaff.name} onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
+                                    <input required value={newStaff.name} onChange={e => setNewStaff({ ...newStaff, name: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
                                         className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary uppercase transition-all" />
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-bold uppercase text-slate-400">Mobile</label>
-                                    <input required value={newStaff.mobile} onChange={e => setNewStaff({ ...newStaff, mobile: e.target.value })}
+                                    <input required value={newStaff.mobile} onChange={e => setNewStaff({ ...newStaff, mobile: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) })}
+                                        placeholder="10-digit number" maxLength={10}
                                         className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary transition-all" />
                                 </div>
                             </div>
@@ -122,7 +124,7 @@ const Users = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-[9px] font-bold uppercase text-slate-400">City</label>
-                                    <input required value={newStaff.city} onChange={e => setNewStaff({ ...newStaff, city: e.target.value })}
+                                    <input required value={newStaff.city} onChange={e => setNewStaff({ ...newStaff, city: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
                                         className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary transition-all" />
                                 </div>
                                 <div className="space-y-1">

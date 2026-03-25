@@ -15,6 +15,8 @@ const Field = ({ icon: Icon, label, value, editing, field, formData, onChange, v
                 className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-4 py-3 rounded-xl outline-none transition-all font-medium text-secondary"
                 value={formData[field]}
                 onChange={e => onChange(field, e.target.value)}
+                maxLength={field === 'mobile' ? 10 : undefined}
+                placeholder={field === 'mobile' ? '10-digit number' : ''}
             />
         ) : (
             <div className="flex items-center justify-between">
@@ -47,9 +49,22 @@ const AccountDetails = () => {
 
     if (!user) { navigate('/login'); return null; }
 
-    const handleChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+    const handleChange = (field, value) => {
+        if (field === 'mobile') {
+            const numericValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+            setFormData(prev => ({ ...prev, [field]: numericValue }));
+            return;
+        }
+        if (field === 'name' || field === 'city' || field === 'country') {
+            const alphaValue = value.replace(/[^a-zA-Z\s]/g, '');
+            setFormData(prev => ({ ...prev, [field]: alphaValue }));
+            return;
+        }
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
 
     const handleSave = async () => {
+        if (formData.mobile.length !== 10) return alert("Mobile number must be exactly 10 digits");
         setLoading(true);
         try {
             const { data } = await api.put(`/users/${user._id}`, {
