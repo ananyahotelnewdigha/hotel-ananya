@@ -20,7 +20,7 @@ router.post('/register', async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         // Add token if not exists (prevent duplicates)
-        const field = deviceType === 'mobile' ? 'fcmTokenMobile' : 'fcmTokens';
+        const field = deviceType === 'app' ? 'fcmTokenMobile' : 'fcmTokens';
 
         if (!user[field].includes(token)) {
             user[field].push(token);
