@@ -9,9 +9,9 @@ export const sendNotificationToUser = async (userId, title, body, data = {}) => 
         const user = await User.findById(userId);
         if (!user) return;
 
-        // Combine all tokens for this user
+        // Combine all tokens for this user and remove duplicates/nulls
         const tokens = [...(user.fcmTokens || []), ...(user.fcmTokenMobile || [])];
-        const uniqueTokens = [...new Set(tokens)];
+        const uniqueTokens = [...new Set(tokens.filter(t => t && t !== 'null' && t !== 'undefined'))];
 
         if (uniqueTokens.length === 0) return;
 
@@ -43,7 +43,7 @@ export const notifyAdmins = async (title, body, data = {}) => {
             allTokens = [...allTokens, ...(adm.fcmTokens || []), ...(adm.fcmTokenMobile || [])];
         });
 
-        const uniqueTokens = [...new Set(allTokens)];
+        const uniqueTokens = [...new Set(allTokens.filter(t => t && t !== 'null' && t !== 'undefined'))];
         if (uniqueTokens.length === 0) return;
 
         const message = {

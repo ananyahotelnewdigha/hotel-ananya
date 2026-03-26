@@ -77,7 +77,7 @@ const registerTokenWithBackend = async (userId, token) => {
         const response = await axios.post(`${import.meta.env.VITE_API_URL}/fcm/register`, {
             userId,
             token,
-            deviceType: 'web'
+            platform: 'web'
         });
         if (response.data.success) {
             console.log('Web FCM Token successfully registered in Database for user:', userId);

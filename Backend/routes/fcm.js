@@ -11,7 +11,7 @@ router.get('/ping', (req, res) => {
 
 // Register Web/App FCM Token for Push Notifications
 router.post('/register', protect, async (req, res) => {
-    const { token, deviceType } = req.body;
+    const { token, platform } = req.body;
     const userId = req.user._id;
     try {
         if (!token) {
@@ -22,8 +22,8 @@ router.post('/register', protect, async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         // Ensure token exists in ONLY ONE field (prevents duplicate notifications)
-        const field = deviceType === 'app' ? 'fcmTokenMobile' : 'fcmTokens';
-        const otherField = deviceType === 'app' ? 'fcmTokens' : 'fcmTokenMobile';
+        const field = platform === 'app' ? 'fcmTokenMobile' : 'fcmTokens';
+        const otherField = platform === 'app' ? 'fcmTokens' : 'fcmTokenMobile';
 
         // Remove from the other list if exists
         user[otherField].pull(token);
@@ -32,7 +32,7 @@ router.post('/register', protect, async (req, res) => {
         user[field].addToSet(token);
 
         await user.save();
-        console.log(`FCM Token registered for user ${user.name} [${deviceType}] - Token: ${token.substring(0, 10)}...`);
+        console.log(`FCM Token registered for user ${user.name} [${platform}] - Token: ${token.substring(0, 10)}...`);
 
         res.json({ success: true, message: 'Token registered successfully' });
     } catch (error) {
