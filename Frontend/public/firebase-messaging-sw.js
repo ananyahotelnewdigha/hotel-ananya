@@ -16,15 +16,38 @@ const messaging = firebase.messaging();
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
     console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    const notificationTitle = payload.notification.title;
+    const notificationTitle = payload.notification.title || 'Ananya Hotel';
     const notificationOptions = {
-        body: payload.notification.body,
-        icon: '/logo.png', // Logo path fixed to use your public logo.png
+        body: payload.notification.body || 'You have a new update.',
+        icon: '/logo.png',
         data: payload.data,
         vibrate: [200, 100, 200],
-        tag: payload.notification.title || 'ananya-sync-notif', // Unique tag for de-duplication
-        renotify: true // Sound/vibrate on each new update with the same title
+        tag: 'hotel-ananya-notif',
+        renotify: true
     };
 
     return self.registration.showNotification(notificationTitle, notificationOptions);
 });
+
+// Handle notification click - Redirect to app or specific link
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    const urlToOpen = event.notification.data?.link || '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // If the app is already open, focus it
+            for (const client of clientList) {
+                if (client.url === urlToOpen && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Otherwise open a new window
+            if (clients.openWindow) {
+                return clients.openWindow(urlToOpen);
+            }
+        })
+    );
+});
+

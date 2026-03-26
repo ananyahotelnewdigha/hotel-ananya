@@ -17,7 +17,11 @@ export const sendNotificationToUser = async (userId, title, body, data = {}) => 
 
         const message = {
             notification: { title, body },
-            data: { ...data, click_action: 'FLUTTER_NOTIFICATION_CLICK' }
+            data: {
+                ...data,
+                click_action: 'FLUTTER_NOTIFICATION_CLICK', // Required for older Flutter SDKs
+                link: data.link || '/' // Used by our new Web Service Worker
+            }
         };
 
         const response = await admin.messaging().sendEachForMulticast({
@@ -25,7 +29,30 @@ export const sendNotificationToUser = async (userId, title, body, data = {}) => 
             tokens: uniqueTokens
         });
 
-        console.log(`Notification sent to ${user.name}: ${response.successCount} success`);
+        // Cleanup invalid/expired tokens
+        if (response.failureCount > 0) {
+            const tokensToRemove = [];
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    const error = resp.error;
+                    console.error(`FCM Token Error [${uniqueTokens[idx].substring(0, 10)}...]:`, error.code);
+
+                    if (error.code === 'messaging/registration-token-not-registered' ||
+                        error.code === 'messaging/invalid-registration-token') {
+                        tokensToRemove.push(uniqueTokens[idx]);
+                    }
+                }
+            });
+
+            if (tokensToRemove.length > 0) {
+                user.fcmTokens = user.fcmTokens.filter(t => !tokensToRemove.includes(t));
+                user.fcmTokenMobile = user.fcmTokenMobile.filter(t => !tokensToRemove.includes(t));
+                await user.save();
+                console.log(`Removed ${tokensToRemove.length} stale tokens from user ${user.name}`);
+            }
+        }
+
+        console.log(`Notification sent to ${user.name}: ${response.successCount} success, ${response.failureCount} failed.`);
     } catch (error) {
         console.error('Error sending notification to user:', error);
     }
@@ -37,26 +64,10 @@ export const sendNotificationToUser = async (userId, title, body, data = {}) => 
 export const notifyAdmins = async (title, body, data = {}) => {
     try {
         const admins = await User.find({ role: 'admin' });
-        let allTokens = [];
 
-        admins.forEach(adm => {
-            allTokens = [...allTokens, ...(adm.fcmTokens || []), ...(adm.fcmTokenMobile || [])];
-        });
-
-        const uniqueTokens = [...new Set(allTokens.filter(t => t && t !== 'null' && t !== 'undefined'))];
-        if (uniqueTokens.length === 0) return;
-
-        const message = {
-            notification: { title, body },
-            data: { ...data, role: 'admin' }
-        };
-
-        const response = await admin.messaging().sendEachForMulticast({
-            ...message,
-            tokens: uniqueTokens
-        });
-
-        console.log(`Admin notification sent: ${response.successCount} success`);
+        for (const adminUser of admins) {
+            await sendNotificationToUser(adminUser._id, title, body, data);
+        }
     } catch (error) {
         console.error('Error notifying admins:', error);
     }

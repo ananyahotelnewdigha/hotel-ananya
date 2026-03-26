@@ -2,6 +2,8 @@ import express from 'express';
 import User from '../models/User.js';
 import { protect } from '../middleware/auth.js';
 
+import { sendNotificationToUser } from '../utils/notificationHelper.js';
+
 const router = express.Router();
 
 // Health check for FCM routes
@@ -41,4 +43,26 @@ router.post('/register', protect, async (req, res) => {
     }
 });
 
+/**
+ * Test Notification to oneself (Admin tool)
+ */
+router.post('/test-self', protect, async (req, res) => {
+    try {
+        const { title = 'Deep Analysis Test', body = 'If you see this, FCM is working perfectly!' } = req.body;
+
+        await sendNotificationToUser(
+            req.user._id,
+            title,
+            body,
+            { type: 'test_notification', timestamp: new Date().toISOString() }
+        );
+
+        res.json({ success: true, message: 'Test notification triggered. Check your device/browser.' });
+    } catch (error) {
+        console.error('Test Self Error:', error.message);
+        res.status(500).json({ message: 'Failed to trigger test notification' });
+    }
+});
+
 export default router;
+

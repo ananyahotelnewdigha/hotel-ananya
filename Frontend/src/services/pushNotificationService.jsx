@@ -1,6 +1,6 @@
 import { messaging } from "../firebase";
 import { getToken, onMessage } from "firebase/messaging";
-import axios from "axios";
+import api from "./api"; // Use custom api instance with auth headers
 
 /**
  * Request notification permission and get token
@@ -14,24 +14,31 @@ export const requestPermissionAndGetToken = async (userId) => {
 
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
+            // Robust Service Worker Registration
+            let registration;
+            if ('serviceWorker' in navigator) {
+                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                console.log('Service Worker registered for FCM:', registration);
+            }
+
             const token = await getToken(messaging, {
-                vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
+                vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+                serviceWorkerRegistration: registration
             });
 
             if (token) {
                 console.log('FCM Token Generated:', token);
 
-                const savedToken = localStorage.getItem('fcmToken');
-                if (savedToken !== token) {
-                    localStorage.setItem('fcmToken', token);
-                    await registerTokenWithBackend(userId, token);
-                }
+                // Always try to register with backend for sync, backend uses addToSet (idempotent)
+                await registerTokenWithBackend(userId, token);
+                localStorage.setItem('fcmToken', token);
 
-                // Initialize foreground native pusher
+                // Initialize foreground listener
                 setupForegroundListener();
 
                 return token;
             } else {
+
                 console.warn('No FCM token obtained.');
                 return null;
             }
@@ -46,43 +53,44 @@ export const requestPermissionAndGetToken = async (userId) => {
 };
 
 /**
- * Handle messages when the app is in foreground and show NATIVE notification
+ * Handle messages when the app is in foreground
  */
 export const setupForegroundListener = () => {
     onMessage(messaging, (payload) => {
         console.log('Foreground Message Received:', payload);
 
-        // Use Native Browser Notification API for foreground
+        // Show a standard browser notification when in foreground
         if (Notification.permission === 'granted') {
-            const notificationTitle = payload.notification.title;
+            const notificationTitle = payload.notification?.title || 'Ananya Hotel';
             const notificationOptions = {
-                body: payload.notification.body,
-                icon: '/logo.png', // Logo fixed
+                body: payload.notification?.body || 'New message received',
+                icon: '/logo.png',
                 data: payload.data,
-                tag: payload.fcmOptions?.link || 'hotel-ananya-sync', // Unique tag for de-duplication
-                renotify: true // Still notify user if new content arrives with same tag
+                tag: 'hotel-ananya-sync',
+                renotify: true
             };
 
-            // Trigger standard OS notification
             new Notification(notificationTitle, notificationOptions);
         }
     });
 };
 
 /**
- * Logic to register the token with the backend
+ * Logic to register the token with the backend using authenticated API
  */
 const registerTokenWithBackend = async (userId, token) => {
     try {
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/fcm/register`, {
-            userId,
+        // userId is provided but the backend uses protect middleware to get userId from token
+        const response = await api.post('/fcm/register', {
             token,
             platform: 'web'
         });
+
         if (response.data.success) {
-            console.log('Web FCM Token successfully registered in Database for user:', userId);
+            console.log('Web FCM Token successfully registered in Database');
         }
     } catch (error) {
-        console.error('Error registering token with backend:', error.message);
+        console.error('Error registering token with backend:', error.response?.data?.message || error.message);
     }
 };
+
