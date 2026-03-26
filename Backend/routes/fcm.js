@@ -1,5 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -9,26 +10,29 @@ router.get('/ping', (req, res) => {
 });
 
 // Register Web/App FCM Token for Push Notifications
-router.post('/register', async (req, res) => {
-    const { userId, token, deviceType } = req.body;
+router.post('/register', protect, async (req, res) => {
+    const { token, deviceType } = req.body;
+    const userId = req.user._id;
     try {
-        if (!userId || !token) {
-            return res.status(400).json({ message: 'UserId and Token are required' });
+        if (!token) {
+            return res.status(400).json({ message: 'Token is required' });
         }
 
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Add token if not exists (prevent duplicates)
+        // Ensure token exists in ONLY ONE field (prevents duplicate notifications)
         const field = deviceType === 'app' ? 'fcmTokenMobile' : 'fcmTokens';
+        const otherField = deviceType === 'app' ? 'fcmTokens' : 'fcmTokenMobile';
 
-        if (!user[field].includes(token)) {
-            user[field].push(token);
-            await user.save();
-            console.log(`FCM Token registered for user ${user.name} [${deviceType}] - Token: ${token.substring(0, 10)}...`);
-        } else {
-            console.log(`FCM Token already exists for user ${user.name} [${deviceType}]`);
-        }
+        // Remove from the other list if exists
+        user[otherField].pull(token);
+
+        // Add to the target list (addToSet prevents duplicates in the same list)
+        user[field].addToSet(token);
+
+        await user.save();
+        console.log(`FCM Token registered for user ${user.name} [${deviceType}] - Token: ${token.substring(0, 10)}...`);
 
         res.json({ success: true, message: 'Token registered successfully' });
     } catch (error) {
