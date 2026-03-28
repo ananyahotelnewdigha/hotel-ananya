@@ -12,10 +12,7 @@ router.get('/ping', (req, res) => {
 });
 
 // Register Web/App FCM Token for Push Notifications
-router.post('/register', (req, res, next) => {
-    console.log(`DEBUG: Incoming FCM Register request | Body: ${JSON.stringify(req.body)} | Auth: ${req.headers.authorization ? 'Present' : 'Missing'}`);
-    next();
-}, protect, async (req, res) => {
+router.post('/register', protect, async (req, res) => {
     const { token, platform } = req.body;
     const userId = req.user._id;
     try {
@@ -46,9 +43,16 @@ router.post('/register', (req, res, next) => {
         user[field].addToSet(token);
 
         await user.save();
-        console.log(`FCM REGISTRATION -> User: ${user.email} | Platform: ${platform || 'web'} | Field: ${field}`);
 
-        res.json({ success: true, message: `Token registered successfully in ${field}` });
+        // Return success and explicit logging
+        console.log(`FCM REGISTRATION COMPLETE -> User: ${user.email} | Saved in: ${field} | Platform Received: ${platform || 'NONE'}`);
+
+        res.json({
+            success: true,
+            message: `Token registered in ${field}`,
+            field: field,
+            tokens_count: user[field].length
+        });
     } catch (error) {
         console.error('FCM Register Error:', error.message);
         res.status(500).json({ message: 'Failed to register FCM token' });

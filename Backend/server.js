@@ -28,6 +28,7 @@ connectDB();
 const app = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // ADDED for better mobile app body parsing
 
 const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ['http://localhost:5173'];
 
