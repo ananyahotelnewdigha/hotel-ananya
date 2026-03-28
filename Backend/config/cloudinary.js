@@ -17,13 +17,18 @@ const upload = multer({ storage });
 
 const uploadToCloudinary = (buffer, folder = 'media') => {
     return new Promise((resolve, reject) => {
+        console.log(`Starting Cloudinary stream upload to folder: hotel_ananya/${folder}`);
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 folder: `hotel_ananya/${folder}`,
-                allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
+                // Removed strict allowed_formats to avoid case-sensitivity issues
             },
             (error, result) => {
-                if (error) return reject(error);
+                if (error) {
+                    console.error('Cloudinary Stream Error:', error);
+                    return reject(error);
+                }
+                console.log('Cloudinary Upload Successful');
                 resolve(result);
             }
         );

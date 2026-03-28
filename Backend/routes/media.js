@@ -33,13 +33,22 @@ router.get('/:type', async (req, res) => {
 // Upload media
 router.post('/upload', upload.single('image'), async (req, res) => {
     try {
+        console.log('Upload Request Body:', req.body);
+        console.log('Upload Request File:', req.file ? {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
+        } : 'No file');
+
         const { type, title, subtext, category } = req.body;
 
         if (!req.file) {
             return res.status(400).json({ message: 'No image uploaded' });
         }
 
+        console.log('Uploading to Cloudinary...');
         const result = await uploadToCloudinary(req.file.buffer, 'media');
+        console.log('Cloudinary Upload Result:', result);
 
         const newMedia = await Media.create({
             imageUrl: result.secure_url,
@@ -52,8 +61,12 @@ router.post('/upload', upload.single('image'), async (req, res) => {
 
         res.status(201).json(newMedia);
     } catch (error) {
-        console.error('Upload Error:', error);
-        res.status(500).json({ message: 'Error uploading media' });
+        console.error('Detailed Upload Error:', error);
+        res.status(500).json({
+            message: 'Error uploading media',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 

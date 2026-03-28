@@ -16,8 +16,14 @@ router.post('/register', protect, async (req, res) => {
     const { token, platform } = req.body;
     const userId = req.user._id;
     try {
-        if (!token) {
-            return res.status(400).json({ message: 'Token is required' });
+        if (!token || token.length < 20) {
+            return res.status(400).json({ message: 'Valid token is required' });
+        }
+
+        // Avoid saving JWT tokens (accidental misconfigurations)
+        if (token.startsWith('eyJ')) {
+            console.warn(`User ${userId} tried to register a JWT as an FCM token. Ignoring.`);
+            return res.status(400).json({ message: 'Invalid token format (JWT detected)' });
         }
 
         const user = await User.findById(userId);

@@ -35,12 +35,19 @@ app.use(cors({
     origin: function (origin, callback) {
         // allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
+
+        // Clean up origins (remove trailing slashes, spaces)
+        const cleanOrigin = origin.trim().replace(/\/$/, "");
+        const cleanAllowed = allowedOrigins.map(o => o.trim().replace(/\/$/, ""));
+
+        if (cleanAllowed.indexOf(cleanOrigin) !== -1 || cleanAllowed.includes('*')) {
+            return callback(null, true);
+        } else {
+            console.warn(`CORS blocked for origin: ${origin}`);
             var msg = 'The CORS policy for this site does not ' +
                 'allow access from the specified Origin.';
             return callback(new Error(msg), false);
         }
-        return callback(null, true);
     },
     credentials: true,
 }));

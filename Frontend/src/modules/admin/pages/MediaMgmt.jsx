@@ -60,9 +60,7 @@ const MediaMgmt = () => {
         }
 
         try {
-            await api.post('/media/upload', data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            await api.post('/media/upload', data);
             setIsModalOpen(false);
             resetForm();
             fetchMedia();

@@ -1,11 +1,22 @@
 import admin from '../services/firebaseAdmin.js';
 import User from '../models/User.js';
+import Notification from '../models/Notification.js';
 
 /**
  * Send Push Notification to specific user via their ID
  */
 export const sendNotificationToUser = async (userId, title, body, data = {}) => {
     try {
+        // First, save notification to Database for longevity (even if push fails)
+        await Notification.create({
+            userId,
+            title,
+            message: body,
+            type: data.type || 'system',
+            link: data.link || '',
+            isRead: false
+        }).catch(err => console.error('Error saving notification to DB:', err.message));
+
         const user = await User.findById(userId);
         if (!user) return;
 
@@ -35,20 +46,24 @@ export const sendNotificationToUser = async (userId, title, body, data = {}) => 
             response.responses.forEach((resp, idx) => {
                 if (!resp.success) {
                     const error = resp.error;
-                    console.error(`FCM Token Error [${uniqueTokens[idx].substring(0, 10)}...]:`, error.code);
+                    const tokenHead = uniqueTokens[idx].substring(0, 10);
+                    console.error(`FCM Token Error [${tokenHead}...]:`, error.code);
 
+                    // These codes indicate the token is permanently invalid and should be removed
                     if (error.code === 'messaging/registration-token-not-registered' ||
-                        error.code === 'messaging/invalid-registration-token') {
+                        error.code === 'messaging/invalid-registration-token' ||
+                        error.code === 'messaging/invalid-argument') {
                         tokensToRemove.push(uniqueTokens[idx]);
                     }
                 }
             });
 
             if (tokensToRemove.length > 0) {
-                user.fcmTokens = user.fcmTokens.filter(t => !tokensToRemove.includes(t));
-                user.fcmTokenMobile = user.fcmTokenMobile.filter(t => !tokensToRemove.includes(t));
+                // Update both token lists in the user document
+                user.fcmTokens = (user.fcmTokens || []).filter(t => !tokensToRemove.includes(t));
+                user.fcmTokenMobile = (user.fcmTokenMobile || []).filter(t => !tokensToRemove.includes(t));
                 await user.save();
-                console.log(`Removed ${tokensToRemove.length} stale tokens from user ${user.name}`);
+                console.log(`Cleaned up ${tokensToRemove.length} invalid tokens from user: ${user.name}`);
             }
         }
 
