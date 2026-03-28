@@ -67,11 +67,11 @@ const Login = () => {
                             <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-500">
                                 <div className="space-y-1.5">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                                        <Mail size={10} className="text-primary" /> Email Portal
+                                        <Mail size={10} className="text-primary" /> Email or Mobile
                                     </label>
                                     <input
-                                        type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                                        placeholder="you@example.com"
+                                        type="text" required value={email} onChange={e => setEmail(e.target.value)}
+                                        placeholder="Email or Mobile Number"
                                         className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-4 py-3.5 rounded-xl outline-none transition-all text-secondary font-medium"
                                     />
                                 </div>

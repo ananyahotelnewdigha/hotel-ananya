@@ -319,7 +319,7 @@ const Signup = () => {
                         </div>
                         <div>
                             <h2 className="text-xl font-serif text-secondary lowercase capitalize">Final <span className="text-primary italic">Verification</span></h2>
-                            <p className="text-xs text-slate-400 mt-2">Enter the 6-digit verification code sent to <br /><span className="text-secondary font-bold">{formData.email}</span></p>
+                            <p className="text-xs text-slate-400 mt-2">Enter the 6-digit verification code sent to <br /><span className="text-secondary font-bold">{formData.mobile}</span></p>
                         </div>
 
                         <div className="space-y-4">

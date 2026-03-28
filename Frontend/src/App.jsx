@@ -26,6 +26,7 @@ import Dip from './modules/user/pages/Dip';
 import Care from './modules/user/pages/Care';
 import Terms from './modules/user/pages/Terms';
 import Notifications from './modules/user/pages/Notifications';
+import ForgotPassword from './modules/user/pages/ForgotPassword';
 
 // Admin Pages
 import Dashboard from './modules/admin/pages/Dashboard';
@@ -89,6 +90,7 @@ function App() {
             {/* Public Routes - No UserLayout (Login/Signup usually don't need the main navbar) */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/terms" element={<Terms />} />
 
             {/* Protected User Module */}

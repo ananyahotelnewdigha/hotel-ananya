@@ -133,6 +133,18 @@ const BookingFlow = () => {
         };
     }, []);
 
+    // Prevent back navigation after confirmation
+    useEffect(() => {
+        if (step === 4) {
+            window.history.pushState(null, '', window.location.href);
+            const handlePopState = (e) => {
+                window.history.pushState(null, '', window.location.href);
+            };
+            window.addEventListener('popstate', handlePopState);
+            return () => window.removeEventListener('popstate', handlePopState);
+        }
+    }, [step]);
+
     useEffect(() => {
         const count = parseInt(numRooms) || 1;
         setRoomDetails(prev => {
@@ -283,12 +295,16 @@ const BookingFlow = () => {
         <div className="min-h-screen bg-slate-50 pb-20">
             {/* Header */}
             <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-                <button
-                    onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)}
-                    className="p-2 hover:bg-slate-50 rounded-sm transition-all text-slate-400"
-                >
-                    <ChevronLeft size={20} />
-                </button>
+                {step < 4 ? (
+                    <button
+                        onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)}
+                        className="p-2 hover:bg-slate-50 rounded-sm transition-all text-slate-400"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
+                ) : (
+                    <div className="w-9" /> // Spacer to keep title centered when back button is hidden
+                )}
                 <div className="flex flex-col items-center">
                     <span className="text-[8px] font-bold text-primary uppercase tracking-[0.3em]">Hotel Ananya</span>
                     <h2 className="text-[11px] font-bold text-secondary uppercase tracking-[0.2em]">

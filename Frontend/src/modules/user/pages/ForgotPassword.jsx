@@ -58,14 +58,14 @@ const ForgotPassword = () => {
                             <form onSubmit={handleSendOtp} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                                 <div className="text-center">
                                     <h1 className="text-2xl font-serif text-secondary lowercase capitalize">Password <span className="text-primary italic">Recovery</span></h1>
-                                    <p className="text-xs text-slate-400 mt-2 italic px-6">Enter your email and we'll send a 6-digit rescue code to your registered mobile.</p>
+                                    <p className="text-xs text-slate-400 mt-2 italic px-6">Enter your email or mobile number and we'll send a 6-digit rescue code to your registered device.</p>
                                 </div>
                                 <div className="space-y-1.5 mt-8">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                                        <Mail size={10} className="text-primary" /> Registered Email
+                                        <Mail size={10} className="text-primary" /> Registered Email or Mobile
                                     </label>
-                                    <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                                        placeholder="you@example.com"
+                                    <input type="text" required value={email} onChange={e => setEmail(e.target.value)}
+                                        placeholder="Email or Mobile"
                                         className="w-full bg-slate-100 border border-slate-200 focus:border-emerald-500 text-sm px-4 py-4 rounded-xl outline-none"
                                     />
                                 </div>
