@@ -14,20 +14,23 @@ router.get('/ping', (req, res) => {
 // Register Web/App FCM Token for Push Notifications
 router.post('/register', protect, async (req, res) => {
     const { token, platform } = req.body;
+    const tokenStr = String(token || '').trim();
     const userId = req.user._id;
 
     // Log basic registration attempt
-    console.log(`[FCM REGISTER ATTEMPT] User: ${req.user.email} | Platform Received: ${platform || 'NONE'} | Token start: ${token?.substring(0, 10) || 'NULL'}`);
+    console.log(`[FCM REGISTER ATTEMPT] User: ${req.user.email} | Platform Received: ${platform || 'NONE'} | Token start: ${tokenStr.substring(0, 10) || 'NULL'}`);
 
     try {
-        if (!token || token.length < 20) {
-            console.warn(`[FCM REJECTED] Token too short or missing for user ${req.user.email}`);
+        // FCM tokens are typically long strings without spaces
+        if (!tokenStr || tokenStr.length < 50 || tokenStr.includes(' ')) {
+            console.warn(`[FCM REJECTED] Malformed or too short token for user ${req.user.email}`);
             return res.status(400).json({ message: 'Valid token is required' });
         }
 
-        // Avoid saving JWT tokens or literal null/undefined strings
-        if (token.startsWith('eyJ') || token === 'null' || token === 'undefined') {
-            console.warn(`[FCM REJECTED] Invalid token format for user ${userId} (${token.substring(0, 10)}...).`);
+        // Avoid saving Mock headers, JWT tokens, or literal null/undefined strings
+        const invalidStarts = ['eyJ', 'TEST_', 'mock_', 'null', 'undefined', 'Bearer '];
+        if (invalidStarts.some(start => tokenStr.startsWith(start)) || tokenStr.toLowerCase() === 'null') {
+            console.warn(`[FCM REJECTED] Invalid token format for user ${userId} (${tokenStr.substring(0, 10)}...).`);
             return res.status(400).json({ message: 'Invalid token format' });
         }
 
