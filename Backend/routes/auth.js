@@ -100,6 +100,8 @@ router.post('/verify-otp', async (req, res) => {
                         email: user.email,
                         mobile: user.mobile,
                         role: user.role,
+                        fcmTokens: user.fcmTokens || [],
+                        fcmTokenMobile: user.fcmTokenMobile || [],
                         token: generateToken(user._id)
                     }
                 });
@@ -126,6 +128,8 @@ router.post('/verify-otp', async (req, res) => {
                     mobile: existingUser.mobile,
                     role: existingUser.role,
                     profilePicture: existingUser.profilePicture,
+                    fcmTokens: existingUser.fcmTokens || [],
+                    fcmTokenMobile: existingUser.fcmTokenMobile || [],
                     token: generateToken(existingUser._id)
                 }
             });
@@ -157,6 +161,8 @@ router.post('/login', async (req, res) => {
                         mobile: user.mobile,
                         role: user.role,
                         profilePicture: user.profilePicture,
+                        fcmTokens: user.fcmTokens || [],
+                        fcmTokenMobile: user.fcmTokenMobile || [],
                         token: generateToken(user._id)
                     }
                 });
