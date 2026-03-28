@@ -64,11 +64,13 @@ router.post('/register', async (req, res) => {
 // @route   POST /api/auth/verify-otp
 // @access  Public
 router.post('/verify-otp', async (req, res) => {
-    const { email, otp } = req.body;
+    const { email, otp } = req.body; // 'email' might be mobile number for login flow
 
     try {
-        // 1. First, check if there's a PENDING registration for this email
-        const pending = await PendingUser.findOne({ email });
+        // 1. First, check if there's a PENDING registration for this identifier (Email-only for pending)
+        const pending = await PendingUser.findOne({
+            $or: [{ email: email.toLowerCase() }, { mobile: email }]
+        });
 
         if (pending) {
             // Flow: Finalize Registration
@@ -111,7 +113,9 @@ router.post('/verify-otp', async (req, res) => {
         }
 
         // 2. If no pending, check for EXISTING user (Flow: Login 2FA)
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({
+            $or: [{ email: email.toLowerCase() }, { mobile: email }]
+        });
         if (!existingUser) return res.status(404).json({ message: 'Session expired or invalid user.' });
 
         if (existingUser.otp === otp) {
@@ -144,10 +148,16 @@ router.post('/verify-otp', async (req, res) => {
 
 // @desc    Auth user & Send Login OTP (2FA)
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body; // 'email' field can now accept phone number too
 
     try {
-        const user = await User.findOne({ email });
+        // Find user by email or mobile number
+        const user = await User.findOne({
+            $or: [
+                { email: email.toLowerCase() },
+                { mobile: email }
+            ]
+        });
         if (user && (await user.matchPassword(password))) {
             // BYPASS OTP for admins and special test user
             if (user.role === 'admin' || user.email === 'b@gmail.com') {
@@ -191,7 +201,9 @@ router.post('/login', async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
     try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({
+            $or: [{ email: email.toLowerCase() }, { mobile: email }]
+        });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         const otp = getGeneratedOtp();
@@ -209,7 +221,9 @@ router.post('/forgot-password', async (req, res) => {
 router.post('/reset-password', async (req, res) => {
     const { email, otp, newPassword } = req.body;
     try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({
+            $or: [{ email: email.toLowerCase() }, { mobile: email }]
+        });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         if (user.otp === otp) {
