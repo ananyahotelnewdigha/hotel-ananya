@@ -15,14 +15,19 @@ router.get('/ping', (req, res) => {
 router.post('/register', protect, async (req, res) => {
     const { token, platform } = req.body;
     const userId = req.user._id;
+
+    // Log basic registration attempt
+    console.log(`[FCM REGISTER ATTEMPT] User: ${req.user.email} | Platform Received: ${platform || 'NONE'} | Token start: ${token?.substring(0, 10) || 'NULL'}`);
+
     try {
         if (!token || token.length < 20) {
+            console.warn(`[FCM REJECTED] Token too short or missing for user ${req.user.email}`);
             return res.status(400).json({ message: 'Valid token is required' });
         }
 
         // Avoid saving JWT tokens or literal null/undefined strings
         if (token.startsWith('eyJ') || token === 'null' || token === 'undefined') {
-            console.warn(`User ${userId} tried to register an invalid token (${token.substring(0, 10)}...). Ignoring.`);
+            console.warn(`[FCM REJECTED] Invalid token format for user ${userId} (${token.substring(0, 10)}...).`);
             return res.status(400).json({ message: 'Invalid token format' });
         }
 
@@ -30,7 +35,8 @@ router.post('/register', protect, async (req, res) => {
         if (!user) return res.status(404).json({ message: 'User not found' });
 
         // Ensure token exists in ONLY ONE field (prevents duplicate notifications)
-        const mobilePlatforms = ['app', 'android', 'ios', 'mobile'];
+        // Broadened platform list (added 'flutter', 'dart')
+        const mobilePlatforms = ['app', 'android', 'ios', 'mobile', 'flutter', 'dart'];
         const isMobile = mobilePlatforms.includes(platform?.toLowerCase());
 
         const field = isMobile ? 'fcmTokenMobile' : 'fcmTokens';
@@ -45,7 +51,7 @@ router.post('/register', protect, async (req, res) => {
         await user.save();
 
         // Return success and explicit logging
-        console.log(`FCM REGISTRATION COMPLETE -> User: ${user.email} | Saved in: ${field} | Platform Received: ${platform || 'NONE'}`);
+        console.log(`[FCM SUCCESS] User: ${user.email} | Saved in: ${field} | Tokens in field: ${user[field].length}`);
 
         res.json({
             success: true,
@@ -54,7 +60,7 @@ router.post('/register', protect, async (req, res) => {
             tokens_count: user[field].length
         });
     } catch (error) {
-        console.error('FCM Register Error:', error.message);
+        console.error('[FCM ERROR] Registration Logic Failed:', error.message);
         res.status(500).json({ message: 'Failed to register FCM token' });
     }
 });
