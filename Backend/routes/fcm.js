@@ -12,7 +12,10 @@ router.get('/ping', (req, res) => {
 });
 
 // Register Web/App FCM Token for Push Notifications
-router.post('/register', protect, async (req, res) => {
+router.post('/register', (req, res, next) => {
+    console.log(`DEBUG: Incoming FCM Register request | Body: ${JSON.stringify(req.body)} | Auth: ${req.headers.authorization ? 'Present' : 'Missing'}`);
+    next();
+}, protect, async (req, res) => {
     const { token, platform } = req.body;
     const userId = req.user._id;
     try {
