@@ -32,90 +32,102 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-4 py-12">
-            {/* Brand Logo Above Card */}
-            <div className="flex flex-col items-center mb-10 transition-all duration-700 animate-in fade-in slide-in-from-top-6">
-                <img src="/logo.png" alt="Ananya Hotel" className="h-20 w-auto drop-shadow-2xl brightness-0 invert opacity-80" />
-                <div className="mt-2 text-center">
-                    <p className="text-[10px] font-black tracking-[0.6em] text-white/40 uppercase">Ananya</p>
-                    <p className="text-[7px] font-bold text-primary tracking-[0.3em] uppercase">Management Portal</p>
+        <div className="min-h-screen bg-[#0C111D] flex flex-col items-center justify-center px-4 py-8 font-sans selection:bg-primary/30">
+            {/* Top Branding Section */}
+            <div className="mb-8 flex flex-col items-center animate-in fade-in slide-in-from-top-8 duration-1000">
+                <div className="bg-slate-800/50 backdrop-blur-xl p-4 rounded-[1.8rem] border border-white/5 shadow-2xl mb-4">
+                    <img src="/logo.png" alt="Ananya Hotel" className="h-14 w-auto brightness-0 invert opacity-90 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+                </div>
+                <div className="text-center space-y-0.5">
+                    <h2 className="text-2xl font-serif text-white tracking-widest uppercase">Ananya</h2>
+                    <div className="flex items-center gap-2">
+                        <div className="h-[1px] w-6 bg-gradient-to-r from-transparent to-primary/50"></div>
+                        <p className="text-[9px] font-bold text-primary tracking-[0.3em] uppercase">Management Portal</p>
+                        <div className="h-[1px] w-6 bg-gradient-to-l from-transparent to-primary/50"></div>
+                    </div>
                 </div>
             </div>
 
-            <div className="w-full max-w-md">
-                <div className="bg-slate-800 rounded-3xl shadow-2xl shadow-black/50 border border-slate-700 overflow-hidden">
-                    {/* Header Banner */}
-                    <div className="relative bg-secondary px-8 pt-8 pb-12 text-center overflow-hidden border-b border-slate-700">
-                        <div className="absolute inset-0 opacity-10"
-                            style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, #c9a84c 0%, transparent 50%), radial-gradient(circle at 80% 20%, #c9a84c 0%, transparent 50%)' }} />
+            <div className="w-full max-w-[380px] relative group">
+                {/* Decorative Glows */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/15 via-transparent to-primary/15 rounded-[2rem] blur-xl opacity-40 group-hover:opacity-80 transition duration-1000"></div>
+                
+                <div className="relative bg-[#151B28] rounded-[2rem] shadow-2xl border border-white/10 overflow-hidden backdrop-blur-sm">
+                    {/* Visual Header with Gradient Overlay */}
+                    <div className="relative px-6 pt-8 pb-12 text-center overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent"></div>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent"></div>
+                        
                         <div className="relative z-10">
-                            <div className="w-16 h-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <ShieldCheck size={30} className="text-primary" />
+                            <div className="w-16 h-16 bg-slate-800/80 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl transform transition-transform group-hover:scale-105 duration-500">
+                                <ShieldCheck size={28} className="text-primary drop-shadow-[0_0_8px_rgba(199,168,76,0.3)]" />
                             </div>
-                            <h1 className="text-2xl font-serif text-white">Staff Login</h1>
-                            <p className="text-white/40 text-xs mt-1 font-medium italic">Hotel Ananya Administrative Gateway</p>
+                            <h1 className="text-2xl font-serif text-white mb-1 leading-tight">Admin Login</h1>
+                            <p className="text-slate-400 text-[11px] font-medium tracking-wide">
+                                Administrative Gateway Access
+                            </p>
                         </div>
                     </div>
 
-                    <div className="px-8 -mt-6 pb-8">
-                        <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 p-6 mb-6 space-y-5">
+                    <div className="px-8 -mt-6 pb-8 relative z-20">
+                        <div className="space-y-4">
                             {error && (
-                                <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl font-medium flex items-start gap-2">
-                                    <span className="mt-0.5">⚠</span> {error}
+                                <div className="bg-red-500/5 border border-red-500/20 text-red-400 text-[10px] p-3 rounded-xl font-medium flex items-center gap-2 animate-shake">
+                                    <div className="shrink-0 w-5 h-5 rounded-full bg-red-500/10 flex items-center justify-center text-[8px]">⚠</div>
+                                    {error}
                                 </div>
                             )}
-                            <form onSubmit={handleSubmit} className="space-y-5">
+                            
+                            <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                                        <Mail size={10} className="text-primary" /> Admin ID / Email
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] ml-1 flex items-center gap-1.5">
+                                        <Mail size={11} className="text-primary/70" /> Email ID
                                     </label>
                                     <input
                                         type="email" required value={email}
                                         onChange={e => setEmail(e.target.value)}
                                         placeholder="admin@ananya.com"
-                                        className="w-full bg-slate-900 border border-slate-700 focus:border-primary focus:bg-slate-900/50 text-sm px-4 py-3.5 rounded-xl outline-none transition-all text-white font-medium placeholder:text-slate-600"
+                                        className="w-full bg-[#0C111D] border border-white/5 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 text-[16px] sm:text-xs px-4 py-3 rounded-xl outline-none transition-all text-white font-medium placeholder:text-slate-700 shadow-inner"
                                     />
                                 </div>
+                                
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                                        <Lock size={10} className="text-primary" /> Security Key
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] ml-1 flex items-center gap-1.5">
+                                        <Lock size={11} className="text-primary/70" /> Security Key
                                     </label>
-                                    <div className="relative">
+                                    <div className="relative group/field">
                                         <input
                                             type={showPass ? 'text' : 'password'} required value={password}
                                             onChange={e => setPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            className="w-full bg-slate-900 border border-slate-700 focus:border-primary focus:bg-slate-900/50 text-sm px-4 py-3.5 pr-12 rounded-xl outline-none transition-all text-white font-medium placeholder:text-slate-600"
+                                            className="w-full bg-[#0C111D] border border-white/5 focus:border-primary/40 focus:ring-4 focus:ring-primary/5 text-[16px] sm:text-xs px-4 py-3 pr-12 rounded-xl outline-none transition-all text-white font-medium placeholder:text-slate-700 shadow-inner"
                                         />
                                         <button type="button" onClick={() => setShowPass(!showPass)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-600 hover:text-white hover:bg-white/5 rounded-lg transition-all">
                                             {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                                         </button>
                                     </div>
                                 </div>
 
                                 <button type="submit" disabled={loading}
-                                    className={`w-full flex items-center justify-center gap-3 py-4 rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-xl
-                                        ${loading ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-primary text-secondary shadow-primary/10 hover:brightness-110 active:scale-95'}`}>
+                                    className={`group relative overflow-hidden w-full h-11 flex items-center justify-center gap-2 rounded-xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all
+                                        ${loading ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-primary text-[#151B28] hover:shadow-[0_0_20px_rgba(199,168,76,0.2)] hover:-translate-y-0.5 active:translate-y-0'}`}>
+                                    {/* Button Shine Effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                                    
                                     {loading ? (
                                         <span className="flex items-center gap-2">
-                                            <span className="w-4 h-4 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
-                                            Authenticating...
+                                            <div className="w-4 h-4 border-2 border-slate-600 border-t-primary rounded-full animate-spin" />
+                                            Verifying...
                                         </span>
                                     ) : (
-                                        <><ShieldCheck size={18} /> Enter Portal</>
+                                        <>
+                                            <ShieldCheck size={16} className="transition-transform group-hover:scale-110" />
+                                            <span>Enter Portal</span>
+                                        </>
                                     )}
                                 </button>
                             </form>
-                        </div>
-
-                        <div className="py-4 border-t border-slate-700 flex flex-col items-center gap-4">
-                            <Link to="/login" className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-primary transition-colors">
-                                Back to Guest Login
-                            </Link>
-                            <p className="text-[8px] text-slate-600 text-center leading-relaxed">
-                                This system is for authorized users only. Unauthorized access attempts are monitored and logged.
-                            </p>
                         </div>
                     </div>
                 </div>
