@@ -108,15 +108,22 @@ const PricingMgmt = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Sanitize payload: remove empty strings for optional ObjectId or URL fields
+        const payload = { ...formData };
+        if (!payload.ratePlan) delete payload.ratePlan;
+        if (!payload.planImage) delete payload.planImage;
+
         try {
             if (editingPlan) {
-                await api.put(`/pricing/${editingPlan._id}`, formData);
+                await api.put(`/pricing/${editingPlan._id}`, payload);
             } else {
-                await api.post('/pricing', formData);
+                await api.post('/pricing', payload);
             }
             setIsModalOpen(false);
             fetchData();
         } catch (error) {
+            console.error('Submission Error:', error.response?.data || error.message);
             alert('Operation failed. Please check all fields.');
         }
     };
@@ -303,7 +310,44 @@ const PricingMgmt = () => {
                             </div>
 
                             {/* Prices */}
-
+                            <div className="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                                <div className="space-y-1.5">
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">1 Guest</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300">₹</span>
+                                        <input type="number" required
+                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all"
+                                            value={formData.adult1Price} onChange={e => setFormData(f => ({ ...f, adult1Price: parseFloat(e.target.value) || 0 }))} />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">2 Guests</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300">₹</span>
+                                        <input type="number" required
+                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all"
+                                            value={formData.adult2Price} onChange={e => setFormData(f => ({ ...f, adult2Price: parseFloat(e.target.value) || 0 }))} />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Extra Adult</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300">₹</span>
+                                        <input type="number" required
+                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all"
+                                            value={formData.extraAdultPrice} onChange={e => setFormData(f => ({ ...f, extraAdultPrice: parseFloat(e.target.value) || 0 }))} />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Child</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300">₹</span>
+                                        <input type="number" required
+                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all"
+                                            value={formData.childPrice} onChange={e => setFormData(f => ({ ...f, childPrice: parseFloat(e.target.value) || 0 }))} />
+                                    </div>
+                                </div>
+                            </div>
 
                             {/* Plan Image */}
                             <div className="md:col-span-2 space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">

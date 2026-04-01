@@ -41,6 +41,7 @@ import Transactions from './modules/admin/pages/Transactions';
 import MediaMgmt from './modules/admin/pages/MediaMgmt';
 import ServiceMgmt from './modules/admin/pages/ServiceMgmt';
 import Messages from './modules/admin/pages/Messages';
+import AdminProfile from './modules/admin/pages/AdminProfile';
 
 // Admin Inventory & Setup
 import Availability from './modules/admin/pages/inventory/Availability';
@@ -140,6 +141,7 @@ function App() {
               <Route path="media" element={<MediaMgmt />} />
               <Route path="services" element={<ServiceMgmt />} />
               <Route path="messages" element={<Messages />} />
+              <Route path="profile" element={<AdminProfile />} />
 
               {/* Inventory Management */}
               <Route path="inventory/availability" element={<Availability />} />

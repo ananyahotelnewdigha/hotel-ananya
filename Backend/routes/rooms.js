@@ -204,6 +204,16 @@ router.post('/variants-with-pricing', async (req, res) => {
     }
 });
 
+// @desc    Get variants for a specific room type
+router.get('/variants/:roomTypeId', async (req, res) => {
+    try {
+        const variants = await RoomVariant.find({ roomType: req.params.roomTypeId });
+        res.json(variants);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching variants' });
+    }
+});
+
 // @desc    Create a new variant
 router.post('/variants', async (req, res) => {
     try {

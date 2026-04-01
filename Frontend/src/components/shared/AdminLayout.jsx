@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Bed, Ticket, Users, Wallet, LogOut,
     Settings, ShieldCheck, Tag, Zap, Percent, Building2, HardDrive, Image, Layers, Menu, X as CloseIcon, MessageSquare, Scale, Copy
@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const { logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -149,7 +150,10 @@ const AdminLayout = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-2 lg:space-x-4 group cursor-pointer">
+                        <div
+                            onClick={() => navigate('/admin/profile')}
+                            className="flex items-center space-x-2 lg:space-x-4 group cursor-pointer"
+                        >
                             <div className="text-right hidden sm:block">
                                 <p className="text-xs font-extrabold text-secondary group-hover:text-primary transition-colors italic leading-none">Super Admin</p>
                                 <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-1">L1 AUTH</p>

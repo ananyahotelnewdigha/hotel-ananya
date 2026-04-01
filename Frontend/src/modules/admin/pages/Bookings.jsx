@@ -29,10 +29,12 @@ const Bookings = () => {
     };
 
     const filtered = bookings.filter(bk => {
-        const guestName = bk.user?.name || '';
-        const bookingId = bk.bookingId || '';
-        const matchesSearch = guestName.toLowerCase().includes(search.toLowerCase()) || bookingId.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = statusFilter === 'All' || bk.bookingStatus.toLowerCase() === statusFilter.toLowerCase();
+        const searchTerm = search.replace(/\s/g, '').toLowerCase();
+        const guestName = (bk.user?.name || '').replace(/\s/g, '').toLowerCase();
+        const bookingId = (bk.bookingId || '').replace(/\s/g, '').toLowerCase();
+
+        const matchesSearch = guestName.includes(searchTerm) || bookingId.includes(searchTerm);
+        const matchesStatus = statusFilter === 'All' || bk.bookingStatus.toLowerCase() === statusFilter.toLowerCase() || (statusFilter === 'All Status' && true);
         return matchesSearch && matchesStatus;
     });
 
@@ -41,7 +43,7 @@ const Bookings = () => {
         const rows = filtered.map(bk => [
             bk.bookingStatus.toUpperCase(),
             bk.user?.name || 'N/A',
-            bk.user?.mobile || 'N/A',
+            `'${bk.user?.mobile || 'N/A'}`,
             new Date(bk.createdAt).toLocaleDateString(),
             bk.checkIn,
             bk.checkOut,
@@ -50,17 +52,17 @@ const Bookings = () => {
             bk.totalPrice
         ]);
 
-        let csvContent = "data:text/csv;charset=utf-8,"
-            + headers.join(",") + "\n"
+        const csvContent = "\uFEFF" + headers.join(",") + "\n"
             + rows.map(r => r.map(cell => `"${cell}"`).join(",")).join("\n");
 
-        const encodedUri = encodeURI(csvContent);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
         link.setAttribute("download", `Ananya_Reservation_Ledger_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
+        document.body.appendChild(link); link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -136,7 +138,8 @@ const Bookings = () => {
                                         <td className="px-6 py-5 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
                                             <span className={`inline-block px-2 py-0.5 rounded-sm text-[7px] font-black uppercase tracking-widest border ${bk.bookingStatus === 'confirmed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                                 bk.bookingStatus === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    'bg-slate-50 text-slate-400 border-slate-200'
+                                                    bk.bookingStatus === 'cancelled' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                                        'bg-blue-50 text-blue-600 border-blue-100'
                                                 }`}>
                                                 {bk.bookingStatus}
                                             </span>
@@ -148,7 +151,7 @@ const Bookings = () => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-1.5 text-secondary font-bold">
                                                 <Phone size={10} className="text-primary shrink-0" />
-                                                <span>{bk.user?.mobile || '—'}</span>
+                                                <span>{bk.user?.mobile || 'NA'}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
@@ -181,11 +184,30 @@ const Bookings = () => {
                                             <p className="text-[7px] font-bold text-slate-400 mt-1 uppercase tracking-tighter tabular-nums">₹{bk.totalPrice?.toLocaleString()}</p>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-1.5">
-                                                {bk.bookingStatus === 'pending' && (
-                                                    <button onClick={() => updateStatus(bk._id, 'confirmed')} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-sm border border-emerald-100"><CheckCircle size={14} /></button>
-                                                )}
-                                                <button onClick={() => updateStatus(bk._id, 'cancelled')} className="p-1 text-rose-500 hover:bg-rose-50 rounded-sm border border-rose-100"><XCircle size={14} /></button>
+                                            <div className="flex justify-end items-center gap-2">
+                                                <div className="relative group/sel">
+                                                    <select
+                                                        value={bk.bookingStatus}
+                                                        onChange={(e) => updateStatus(bk._id, e.target.value)}
+                                                        disabled={bk.bookingStatus === 'cancelled'}
+                                                        className={`appearance-none bg-white border border-slate-200 rounded-sm pl-2 pr-6 py-1.5 text-[8px] font-black uppercase tracking-widest cursor-pointer outline-none transition-all hover:border-primary/40 text-secondary
+                                                            ${bk.bookingStatus === 'confirmed' ? 'text-emerald-600' :
+                                                                bk.bookingStatus === 'pending' ? 'text-amber-600' :
+                                                                    bk.bookingStatus === 'cancelled' ? 'text-rose-600 opacity-50 cursor-not-allowed' :
+                                                                        'text-blue-600'
+                                                            }`}
+                                                    >
+                                                        <option value="pending">Pending</option>
+                                                        <option value="confirmed">Confirmed</option>
+                                                        <option value="cancelled">Cancelled</option>
+                                                        <option value="completed">Completed</option>
+                                                    </select>
+                                                    {bk.bookingStatus !== 'cancelled' && (
+                                                        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300">
+                                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>

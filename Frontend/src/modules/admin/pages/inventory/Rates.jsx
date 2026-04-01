@@ -86,14 +86,54 @@ const Rates = () => {
 
     const handleCopyRate = (rtId, planId) => {
         const row = matrix.find(m => m._id === rtId);
+        if (!row) return;
         const plan = row.plans.find(p => p.planId === planId);
+        if (!plan || !plan.dailyRates?.length) return;
+
         const first = plan.dailyRates[0];
+        const newUpdates = {};
+
         plan.dailyRates.forEach(dr => {
-            updateRate(rtId, dr.date, planId, 'adult1Price', first.adult1Price);
-            updateRate(rtId, dr.date, planId, 'adult2Price', first.adult2Price);
-            updateRate(rtId, dr.date, planId, 'extraAdultPrice', first.extraAdultPrice);
-            updateRate(rtId, dr.date, planId, 'childPrice', first.childPrice);
+            const key = `${rtId}-${dr.date}`;
+            const currentKeyUpdate = pendingUpdates[key] || { roomTypeId: rtId, date: dr.date, planUpdates: [] };
+
+            // Create a local copy of planUpdates
+            let planUpdates = [...currentKeyUpdate.planUpdates];
+            let planUpdate = planUpdates.find(p => p.planId === planId);
+
+            if (!planUpdate) {
+                planUpdate = { planId };
+                planUpdates.push(planUpdate);
+            }
+
+            planUpdate.adult1Price = first.adult1Price;
+            planUpdate.adult2Price = first.adult2Price;
+            planUpdate.extraAdultPrice = first.extraAdultPrice;
+            planUpdate.childPrice = first.childPrice;
+
+            newUpdates[key] = { ...currentKeyUpdate, planUpdates };
         });
+
+        setPendingUpdates(prev => ({ ...prev, ...newUpdates }));
+        setMatrix(prev => prev.map(m => {
+            if (m._id !== rtId) return m;
+            return {
+                ...m,
+                plans: m.plans.map(p => {
+                    if (p.planId !== planId) return p;
+                    return {
+                        ...p,
+                        dailyRates: p.dailyRates.map(dr => ({
+                            ...dr,
+                            adult1Price: first.adult1Price,
+                            adult2Price: first.adult2Price,
+                            extraAdultPrice: first.extraAdultPrice,
+                            childPrice: first.childPrice
+                        }))
+                    };
+                })
+            };
+        }));
     };
 
     const handleSave = async () => {
@@ -191,53 +231,66 @@ const Rates = () => {
                                             <span className="text-[8px] sm:text-[10px] font-black text-secondary uppercase tracking-widest truncate block max-w-[180px] sm:max-w-none border-l-4 border-emerald-500 pl-3">{row.name}</span>
                                         </td>
                                     </tr>
-                                    {row.plans.map((plan) => (
-                                        <React.Fragment key={plan.planId}>
-                                            {[
-                                                { label: '1 Guest', key: 'adult1Price' },
-                                                { label: '2 Guest', key: 'adult2Price' },
-                                                { label: 'Extra Adult', key: 'extraAdultPrice' },
-                                                { label: 'Extra Child', key: 'childPrice' }
-                                            ].map((occ, occIdx) => (
-                                                <tr key={occ.key} className="group border-b border-slate-50">
-                                                    <td className="px-3 sm:px-8 py-3 sm:py-5 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-all shadow-[15px_0_20px_-10px_rgba(0,0,0,0.02)]">
-                                                        <div className="flex flex-col gap-1.5 min-w-0">
-                                                            {occIdx === 0 && (
-                                                                <div className="flex items-center justify-between gap-2 mb-1">
-                                                                    <span className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase truncate max-w-[80px] sm:max-w-[200px] leading-tight">
-                                                                        {plan.planName}
-                                                                    </span>
-                                                                    <button
-                                                                        onClick={() => handleCopyRate(row._id, plan.planId)}
-                                                                        className="shrink-0 bg-emerald-50 text-emerald-600 p-1 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
-                                                                        title="Copy first date to all"
-                                                                    >
-                                                                        <Copy size={10} />
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                            <span className="text-[6px] sm:text-[8px] font-black text-slate-400 uppercase flex items-center gap-1.5 whitespace-nowrap opacity-80">
-                                                                <Users size={10} className="text-slate-300 shrink-0" /> {occ.label}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    {plan.dailyRates.map((dr, i) => (
-                                                        <td key={i} className={`px-2 sm:px-4 py-3 sm:py-5 border-r border-slate-100 transition-all ${new Date(dr.date).getDay() === 0 ? 'bg-rose-50/10' : ''}`}>
-                                                            <div className="relative group/input">
-                                                                <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[7px] font-bold text-slate-300 pointer-events-none group-focus-within/input:text-emerald-500 transition-colors">₹</span>
-                                                                <input
-                                                                    type="text"
-                                                                    className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-1 sm:px-3 py-2 sm:py-2.5 text-center text-[9px] sm:text-[11px] font-black text-secondary shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all tabular-nums outline-none"
-                                                                    value={dr[occ.key]}
-                                                                    onChange={(e) => updateRate(row._id, dr.date, plan.planId, occ.key, parseInt(e.target.value.replace(/\D/g, '')) || 0)}
-                                                                />
+                                    {row.plans && row.plans.length > 0 ? (
+                                        row.plans.map((plan) => (
+                                            <React.Fragment key={plan.planId}>
+                                                {[
+                                                    { label: '1 Guest', key: 'adult1Price' },
+                                                    { label: '2 Guest', key: 'adult2Price' },
+                                                    { label: 'Extra Adult', key: 'extraAdultPrice' },
+                                                    { label: 'Extra Child', key: 'childPrice' }
+                                                ].map((occ, occIdx) => (
+                                                    <tr key={occ.key} className="group border-b border-slate-50">
+                                                        <td className="px-3 sm:px-8 py-3 sm:py-5 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100 transition-all shadow-[15px_0_20px_-10px_rgba(0,0,0,0.02)]">
+                                                            <div className="flex flex-col gap-1.5 min-w-0">
+                                                                {occIdx === 0 && (
+                                                                    <div className="flex items-center justify-between gap-2 mb-1">
+                                                                        <span className="text-[7px] sm:text-[9px] font-black text-emerald-600 uppercase truncate max-w-[80px] sm:max-w-[200px] leading-tight">
+                                                                            {plan.planName}
+                                                                        </span>
+                                                                        <button
+                                                                            onClick={() => handleCopyRate(row._id, plan.planId)}
+                                                                            className="shrink-0 bg-emerald-50 text-emerald-600 p-1 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+                                                                            title="Copy first date to all"
+                                                                        >
+                                                                            <Copy size={10} />
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                                <span className="text-[6px] sm:text-[8px] font-black text-slate-400 uppercase flex items-center gap-1.5 whitespace-nowrap opacity-80">
+                                                                    <Users size={10} className="text-slate-300 shrink-0" /> {occ.label}
+                                                                </span>
                                                             </div>
                                                         </td>
-                                                    ))}
-                                                </tr>
-                                            ))}
-                                        </React.Fragment>
-                                    ))}
+                                                        {plan.dailyRates.map((dr, i) => (
+                                                            <td key={i} className={`px-2 sm:px-4 py-3 sm:py-5 border-r border-slate-100 transition-all ${new Date(dr.date).getDay() === 0 ? 'bg-rose-50/10' : ''}`}>
+                                                                <div className="relative group/input">
+                                                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[7px] font-bold text-slate-300 pointer-events-none group-focus-within/input:text-emerald-500 transition-colors">₹</span>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-1 sm:px-3 py-2 sm:py-2.5 text-center text-[9px] sm:text-[11px] font-black text-secondary shadow-sm focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/5 transition-all tabular-nums outline-none"
+                                                                        value={dr[occ.key]}
+                                                                        onChange={(e) => updateRate(row._id, dr.date, plan.planId, occ.key, parseInt(e.target.value.replace(/\D/g, '')) || 0)}
+                                                                    />
+                                                                </div>
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                            </React.Fragment>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={dates.length + 1} className="px-8 py-10 text-center bg-slate-50/30">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No Pricing Plans Active for this Variant</p>
+                                                    <a href="/admin/setup/pricing" className="bg-white border border-slate-200 px-6 py-2 rounded-xl text-[9px] font-black text-emerald-600 uppercase tracking-widest shadow-sm hover:border-emerald-200 transition-all">
+                                                        + Setup Pricing Plans Now
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
                                 </React.Fragment>
                             ))}
                         </tbody>

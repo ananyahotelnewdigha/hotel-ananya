@@ -85,7 +85,8 @@ router.get('/my/:userId', async (req, res) => {
         const bookings = await Booking.find({ user: req.params.userId })
             .populate('roomType')
             .populate('variant')
-            .populate({ path: 'plan', populate: { path: 'ratePlan' } });
+            .populate({ path: 'plan', populate: { path: 'ratePlan' } })
+            .sort({ createdAt: -1 });
         res.json(bookings);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching user bookings' });
@@ -96,10 +97,11 @@ router.get('/my/:userId', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const bookings = await Booking.find({})
-            .populate('user', 'name email')
+            .populate('user', 'name email mobile')
             .populate('roomType')
             .populate('variant')
-            .populate({ path: 'plan', populate: { path: 'ratePlan' } });
+            .populate({ path: 'plan', populate: { path: 'ratePlan' } })
+            .sort({ createdAt: -1 });
         res.json(bookings);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching all bookings' });

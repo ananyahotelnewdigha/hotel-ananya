@@ -8,7 +8,7 @@ const router = express.Router();
 // @access  Private/Admin
 router.get('/', async (req, res) => {
     try {
-        const users = await User.find({}).select('-password');
+        const users = await User.find({}).select('-password').sort({ createdAt: -1 });
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching users' });
@@ -22,9 +22,21 @@ router.put('/:id', async (req, res) => {
         const user = await User.findById(req.params.id);
         if (user) {
             user.name = req.body.name || user.name;
+            user.email = req.body.email ? req.body.email.toLowerCase() : user.email;
             user.mobile = req.body.mobile || user.mobile;
             user.city = req.body.city || user.city;
             user.country = req.body.country || user.country;
+
+            if (req.body.password) {
+                if (!req.body.oldPassword) {
+                    return res.status(400).json({ message: 'Old password is required to set a new password' });
+                }
+                const isMatch = await user.matchPassword(req.body.oldPassword);
+                if (!isMatch) {
+                    return res.status(400).json({ message: 'Invalid old password' });
+                }
+                user.password = req.body.password;
+            }
 
             // Optional admin updates
             user.role = req.body.role || user.role;

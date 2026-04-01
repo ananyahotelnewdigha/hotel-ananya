@@ -7,11 +7,6 @@ const Users = () => {
     const [search, setSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState('All');
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newStaff, setNewStaff] = useState({
-        name: '', email: '', password: '', role: 'admin',
-        mobile: '', country: 'India', city: 'Digha'
-    });
 
     const fetchUsers = async () => {
         try {
@@ -26,18 +21,7 @@ const Users = () => {
 
     useEffect(() => { fetchUsers(); }, []);
 
-    const handleAddStaff = async (e) => {
-        e.preventDefault();
-        if (newStaff.mobile.length !== 10) return alert("Mobile number must be exactly 10 digits");
-        try {
-            await api.post('/auth/register', newStaff);
-            fetchUsers();
-            setIsModalOpen(false);
-            setNewStaff({ name: '', email: '', password: '', role: 'admin', mobile: '', country: 'India', city: 'Digha' });
-        } catch (error) {
-            alert(error.response?.data?.message || 'Failed to add staff');
-        }
-    };
+
 
     const toggleStatus = async (user) => {
         try {
@@ -58,19 +42,20 @@ const Users = () => {
     const downloadCSV = () => {
         const headers = ["Name", "Email", "Mobile", "Role", "City", "Country", "Wallet", "Verified", "Status", "Joined"];
         const rows = filtered.map(u => [
-            u.name, u.email, u.mobile, u.role.toUpperCase(), u.city, u.country, u.walletBalance, u.isVerified, u.status, new Date(u.createdAt).toLocaleDateString()
+            u.name, u.email, `'${u.mobile || ''}`, u.role.toUpperCase(), u.city, u.country, u.walletBalance, u.isVerified, u.status, new Date(u.createdAt).toLocaleDateString()
         ]);
 
-        let csvContent = "data:text/csv;charset=utf-8,"
-            + headers.join(",") + "\n"
+        const csvContent = "\uFEFF" + headers.join(",") + "\n"
             + rows.map(r => r.map(cell => `"${cell}"`).join(",")).join("\n");
 
-        const encodedUri = encodeURI(csvContent);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
         link.setAttribute("download", `Ananya_Users_Registry_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link); link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
@@ -83,12 +68,7 @@ const Users = () => {
                     <h1 className="text-xl lg:text-3xl font-black text-secondary lowercase capitalize tracking-tighter leading-none">Users <span className="text-emerald-600 italic">Registry</span></h1>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-primary text-secondary px-6 py-3.5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl hover:shadow-emerald-600/20 active:scale-95 transition-all"
-                    >
-                        <Shield size={14} /> Add Staff
-                    </button>
+
                     <button
                         onClick={downloadCSV}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-secondary text-white px-6 py-3.5 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl hover:bg-emerald-600 hover:text-white transition-all active:scale-95"
@@ -98,49 +78,7 @@ const Users = () => {
                 </div>
             </header>
 
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-secondary/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-sm w-full max-w-lg p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <h3 className="text-xl font-bold text-secondary uppercase mb-6">Create Staff <span className="text-primary italic">Account</span></h3>
-                        <form onSubmit={handleAddStaff} className="space-y-5">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[9px] font-bold uppercase text-slate-400">Full Name</label>
-                                    <input required value={newStaff.name} onChange={e => setNewStaff({ ...newStaff, name: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary uppercase transition-all" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[9px] font-bold uppercase text-slate-400">Mobile</label>
-                                    <input required value={newStaff.mobile} onChange={e => setNewStaff({ ...newStaff, mobile: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) })}
-                                        placeholder="10-digit number" maxLength={10}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary transition-all" />
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-[9px] font-bold uppercase text-slate-400">Email Address</label>
-                                <input required type="email" value={newStaff.email} onChange={e => setNewStaff({ ...newStaff, email: e.target.value })}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary transition-all" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-[9px] font-bold uppercase text-slate-400">City</label>
-                                    <input required value={newStaff.city} onChange={e => setNewStaff({ ...newStaff, city: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary transition-all" />
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-[9px] font-bold uppercase text-slate-400">Password</label>
-                                    <input required type="password" value={newStaff.password} onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary transition-all" />
-                                </div>
-                            </div>
-                            <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-[10px] font-bold uppercase text-slate-400 hover:text-secondary">Cancel</button>
-                                <button type="submit" className="flex-1 py-3 bg-secondary text-white rounded-sm text-[10px] font-bold uppercase hover:bg-primary hover:text-secondary transition-all">Authorize Staff</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+
 
             <div className="bg-white rounded-sm border border-slate-200 shadow-sm overflow-hidden">
                 <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50/30">
