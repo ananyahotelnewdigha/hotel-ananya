@@ -147,7 +147,7 @@ const generateVoucherPDF = async (booking) => {
 
     pdf.setFontSize(7);
     pdf.setTextColor(148, 163, 184);
-    pdf.text('stay@ananyahotel.com  \u00b7  +91 900 000 0000', w / 2, headerY + 16, { align: 'center' });
+    pdf.text('hello@ananyahotel.com  \u00b7  +91 74071 75567', w / 2, headerY + 16, { align: 'center' });
 
     // Status / Reference
     const divY = headerY + 22;

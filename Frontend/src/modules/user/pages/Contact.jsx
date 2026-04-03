@@ -13,13 +13,13 @@ const contactInfo = [
     },
     {
         icon: Phone, label: 'Call Us',
-        lines: ['+91 74071 75567', '+91 98765 43210'],
+        lines: ['+91 74071 75567'],
         action: { text: 'WhatsApp Us', href: 'https://wa.me/917407175567' },
         color: 'text-emerald-500 bg-emerald-50'
     },
     {
         icon: Mail, label: 'Email',
-        lines: ['hello@ananyahotel.com', 'bookings@ananyahotel.com'],
+        lines: ['hello@ananyahotel.com'],
         color: 'text-blue-500 bg-blue-50'
     },
     {

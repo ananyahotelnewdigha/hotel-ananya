@@ -862,7 +862,7 @@ const BookingFlow = () => {
 
                                     pdf.setFontSize(24); pdf.setTextColor(15, 23, 42); pdf.text('Ananya Hotel', w / 2, hY + 5, { align: 'center' });
                                     pdf.setFontSize(8); pdf.setTextColor(100, 116, 139); pdf.text('NEW DIGHA, WEST BENGAL  \u00b7  LUXURY SANCTUARY', w / 2, hY + 11, { align: 'center' });
-                                    pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.text('stay@ananyahotel.com  \u00b7  +91 900 000 0000', w / 2, hY + 16, { align: 'center' });
+                                    pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.text('hello@ananyahotel.com  \u00b7  +91 74071 75567', w / 2, hY + 16, { align: 'center' });
 
                                     const divY = hY + 22;
                                     pdf.setDrawColor(226, 232, 240); pdf.line(20, divY, w - 20, divY);

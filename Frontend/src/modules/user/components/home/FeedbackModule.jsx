@@ -21,7 +21,7 @@ const FeedbackModule = () => {
                 </button>
                 <div className="pt-2">
                     <p className="text-primary text-[8px] font-black uppercase tracking-[0.4em]">or call us at</p>
-                    <p className="text-secondary font-serif text-lg tracking-wider">+91 98765 43210</p>
+                    <p className="text-secondary font-serif text-lg tracking-wider">+91 74071 75567</p>
                 </div>
             </div>
 
