@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, Camera, ChevronLeft, Shield, CheckCircle2, Save, X } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Camera, ChevronLeft, Shield, CheckCircle2, Save, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 import api from '../../../services/api';
 
@@ -34,8 +35,10 @@ const Field = ({ icon: Icon, label, value, editing, field, formData, onChange, v
 const AccountDetails = () => {
     const { user, updateProfile } = useAuth();
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [saved, setSaved] = useState(false);
     const [notifications, setNotifications] = useState(true);
 
@@ -61,6 +64,38 @@ const AccountDetails = () => {
             return;
         }
         setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleCameraClick = () => {
+        if (!isEditing) return;
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        const data = new FormData();
+        data.append('image', file);
+
+        try {
+            const res = await api.post('/media/upload-single', data, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            const imageUrl = res.data.imageUrl;
+
+            // Update profile with new image URL
+            const updatedUserRes = await api.put(`/users/${user._id}`, { profilePicture: imageUrl });
+            updateProfile(updatedUserRes.data);
+            toast.success('Visual identity updated!');
+        } catch (error) {
+            console.error(error);
+            toast.error('Identity photo mismatch');
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSave = async () => {
@@ -89,9 +124,18 @@ const AccountDetails = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-6 md:pb-10">
+            {/* Hidden Input for Camera */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+            />
+
             {/* Header */}
             <div className="bg-white border-b border-slate-100 shadow-sm px-4 py-4 flex items-center gap-3">
-                <button onClick={() => navigate('/profile')}
+                <button onClick={() => navigate('/')}
                     className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-secondary active:scale-90 transition-all">
                     <ChevronLeft size={18} />
                 </button>
@@ -127,34 +171,36 @@ const AccountDetails = () => {
             )}
 
             <div className="max-w-xl mx-auto px-4 pt-5 space-y-4">
-                {/* Avatar Card */}
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-sm relative">
-                    <div className="h-28 bg-secondary relative overflow-hidden rounded-t-2xl">
-                        <div className="absolute inset-0 opacity-20"
-                            style={{ backgroundImage: 'radial-gradient(circle at 80% 50%, #c9a84c 0%, transparent 50%)' }} />
-                    </div>
-                    <div className="px-6 pb-6 -mt-8 relative z-10">
-                        <div className="flex items-center justify-between gap-4">
-                            <div className="relative">
-                                <div className="w-20 h-20 bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-center text-primary font-serif text-3xl font-black uppercase overflow-hidden">
-                                    {user.profilePicture ? <img src={user.profilePicture} className="w-full h-full object-cover" alt="" /> : user.name[0]}
-                                </div>
-                                <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary text-white rounded-xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-90">
-                                    <Camera size={13} />
-                                </button>
-                            </div>
-                            <div className="mt-8 text-right flex flex-col items-end gap-1.5">
-                                <h2 className="text-secondary font-bold text-lg leading-tight">{formData.name}</h2>
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-100/50">
-                                    <Shield size={10} className="fill-emerald-700/10 text-emerald-600" /> Verified {user.role}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 {/* Personal Info */}
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-5">
+                    {/* Visual Identity (Avatar) */}
+                    <div className="flex flex-col items-center justify-center pb-6 border-b border-slate-50">
+                        <div className="relative group">
+                            <div className="w-24 h-24 bg-primary/10 border-4 border-white shadow-xl rounded-[2rem] flex items-center justify-center text-primary font-serif text-3xl font-bold overflow-hidden ring-4 ring-primary/5">
+                                {uploading ? (
+                                    <div className="flex flex-col items-center justify-center">
+                                        <Loader2 className="animate-spin" size={24} />
+                                        <span className="text-[7px] font-black uppercase mt-1">Syncing...</span>
+                                    </div>
+                                ) : user.profilePicture ? (
+                                    <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    user.name[0]
+                                )}
+                            </div>
+                            {isEditing && (
+                                <button
+                                    onClick={handleCameraClick}
+                                    className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-secondary rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-90 border-4 border-white"
+                                >
+                                    <Camera size={16} />
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest mt-4">Visual Clearance Protocol</p>
+                    </div>
+
                     <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
                         Personal Information
                     </h2>

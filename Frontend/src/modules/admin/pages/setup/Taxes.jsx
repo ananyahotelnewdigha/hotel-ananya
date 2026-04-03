@@ -110,14 +110,14 @@ const Taxes = () => {
 
                         <div className="relative z-10">
                             <h3 className="text-lg lg:text-xl font-black text-secondary lowercase capitalize truncate">{tax.name}</h3>
-                            <p className="text-[8px] lg:text-[9px] text-slate-300 font-black uppercase tracking-widest mt-1 truncate block opacity-50">ID: {tax._id?.slice(-8)}</p>
+                            <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest mt-1 truncate block">ID: {tax._id?.slice(-8)}</p>
 
                             <div className="mt-6 lg:mt-8 flex items-end justify-between">
                                 <div className="space-y-1 flex-1">
                                     <p className="text-[8px] lg:text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Applied Rate</p>
                                     <div className="flex items-center gap-2">
                                         {tax.type === 'Percentage' ? <Percent size={14} className="text-primary shrink-0" /> : <IndianRupee size={14} className="text-primary shrink-0" />}
-                                        <span className="text-2xl lg:text-3xl font-black text-secondary tabular-nums leading-none">{tax.rate}{tax.type === 'Percentage' ? '%' : ''}</span>
+                                        <span className="text-2xl lg:text-3xl font-black text-secondary tabular-nums leading-none">{tax.rate}</span>
                                     </div>
                                 </div>
                                 <div className={`px-4 py-1.5 text-[8px] lg:text-[9px] font-black uppercase tracking-widest rounded-full border shadow-sm transition-all whitespace-nowrap ${tax.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'
@@ -136,7 +136,13 @@ const Taxes = () => {
                     <div className="absolute inset-0 bg-secondary/80 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
                     <div className="bg-white rounded-[2rem] lg:rounded-[3.5rem] w-full max-w-lg p-8 lg:p-12 relative z-10 animate-in zoom-in duration-300 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
                         <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 lg:top-10 lg:right-10 p-2 text-slate-400 hover:text-secondary hover:bg-slate-50 rounded-xl transition-all active:scale-90"><X size={20} /></button>
-                        <h2 className="text-xl lg:text-3xl font-black text-secondary lowercase capitalize tracking-tight mb-2 pr-10">{editingTax ? 'Refine Tax <span className="text-primary italic">Policy</span>' : 'Establish <span className="text-primary italic">New Tax</span>'}</h2>
+                        <h2 className="text-xl lg:text-3xl font-black text-secondary lowercase capitalize tracking-tight mb-2 pr-10">
+                            {editingTax ? (
+                                <>Refine Tax <span className="text-primary italic">Policy</span></>
+                            ) : (
+                                <>Establish <span className="text-primary italic">New Tax</span></>
+                            )}
+                        </h2>
                         <p className="text-[10px] lg:text-sm text-slate-500 mb-8 lg:mb-10 font-bold italic lowercase opacity-70">Specify the magnitude and classification for regulatory alignment.</p>
 
                         <form onSubmit={handleSave} className="space-y-6 lg:space-y-8 text-left">
@@ -157,6 +163,7 @@ const Taxes = () => {
                                     <input
                                         required
                                         type="number"
+                                        min="0"
                                         value={formData.rate}
                                         onChange={e => setFormData({ ...formData, rate: e.target.value })}
                                         className="w-full bg-slate-50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-3.5 lg:py-4.5 font-bold outline-none focus:ring-2 focus:ring-primary/20 shadow-inner text-sm lg:text-base"

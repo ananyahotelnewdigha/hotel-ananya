@@ -14,7 +14,7 @@ const FeedbackModule = () => {
 
             <div className="max-w-xs mx-auto space-y-3">
                 <button
-                    onClick={() => navigate('/contact')}
+                    onClick={() => navigate('/contact', { state: { subject: 'Feedback' } })}
                     className="w-full bg-secondary text-white text-[10px] font-black uppercase tracking-[0.3em] py-4 rounded-xl shadow-xl shadow-secondary/20 hover:bg-primary transition-all active:scale-95"
                 >
                     Submit a Review

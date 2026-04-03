@@ -202,7 +202,7 @@ const BulkUpdate = () => {
             const updates = {};
 
             if (formData.activeTypes.availability && formData.updates.roomsToSell !== '') {
-                updates.roomsToSell = parseInt(formData.updates.roomsToSell);
+                updates.roomsToSell = Math.max(0, parseInt(formData.updates.roomsToSell) || 0);
             }
             if (formData.activeTypes.stopSell) {
                 updates.isStopSell = formData.updates.isStopSell;
@@ -476,6 +476,7 @@ const BulkUpdate = () => {
                                 </label>
                                 <input
                                     type="number"
+                                    min="0"
                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm font-black outline-none focus:border-primary/30 focus:ring-4 focus:ring-primary/5 transition-all tabular-nums"
                                     placeholder={selectedVariant ? String(selectedVariant.totalRooms) : '0'}
                                     value={formData.updates.roomsToSell}

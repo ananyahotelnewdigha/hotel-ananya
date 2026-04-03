@@ -19,6 +19,29 @@ const getGeneratedOtp = () => {
     return isOtpEnabled ? Math.floor(100000 + Math.random() * 900000).toString() : '123456';
 };
 
+// @desc    Check identifier availability
+// @route   POST /api/auth/check-availability
+// @access  Public
+router.post('/check-availability', async (req, res) => {
+    const { email, mobile } = req.body;
+    try {
+        const query = { $or: [] };
+        if (email) query.$or.push({ email: email.toLowerCase() });
+        if (mobile) query.$or.push({ mobile });
+
+        if (query.$or.length === 0) return res.json({ available: true });
+
+        const user = await User.findOne(query);
+        if (user) {
+            const conflict = user.mobile === mobile ? 'Mobile number' : 'Email address';
+            return res.json({ available: false, message: `${conflict} already registered.` });
+        }
+        res.json({ available: true });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error check availability' });
+    }
+});
+
 // @desc    Initiate Registration (Temporary Storage)
 // @route   POST /api/auth/register
 // @access  Public
@@ -30,12 +53,18 @@ router.post('/register', async (req, res) => {
     } = req.body;
 
     try {
-        // 1. Check if user already exists permanently
-        const userExists = await User.findOne({ email });
-        if (userExists) return res.status(400).json({ message: 'User already exists' });
+        // 1. Check if user already exists permanently by email OR mobile
+        const query = { $or: [{ mobile }] };
+        if (email) query.$or.push({ email: email.toLowerCase() });
 
-        // 2. Clear old pending signups for this email if any
-        await PendingUser.deleteMany({ email });
+        const userExists = await User.findOne(query);
+        if (userExists) {
+            const conflict = userExists.mobile === mobile ? 'Mobile number' : 'Email address';
+            return res.status(400).json({ message: `${conflict} already registered.` });
+        }
+
+        // 2. Clear old pending signups for this identifier if any
+        await PendingUser.deleteMany(query);
 
         // 3. Create Pending User Record
         const otp = getGeneratedOtp();

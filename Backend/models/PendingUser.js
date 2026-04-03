@@ -2,9 +2,9 @@ import mongoose from 'mongoose';
 
 const pendingUserSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: false, unique: true, sparse: true },
     password: { type: String, required: true },
-    mobile: { type: String, required: true },
+    mobile: { type: String, required: true, unique: true },
     country: { type: String, required: true },
     city: { type: String, required: true },
     profilePicture: { type: String, default: '' },

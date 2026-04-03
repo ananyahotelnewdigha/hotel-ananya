@@ -25,7 +25,7 @@ const uploadToCloudinary = (buffer, folder = 'media') => {
             },
             (error, result) => {
                 if (error) {
-                    console.error('Cloudinary Stream Error:', error);
+                    console.error('Cloudinary Stream Full Error:', JSON.stringify(error, null, 2));
                     return reject(error);
                 }
                 console.log('Cloudinary Upload Successful');

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Mail, Lock, LogIn, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -10,8 +11,17 @@ const Login = () => {
     const [otpStep, setOtpStep] = useState(false);
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
     const { login, verifyOtp } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        let timer;
+        if (resendTimer > 0) {
+            timer = setInterval(() => setResendTimer(prev => prev - 1), 1000);
+        }
+        return () => clearInterval(timer);
+    }, [resendTimer]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -23,9 +33,11 @@ const Login = () => {
         if (result.success) {
             navigate('/');
         } else if (result.otpRequired) {
-            setOtpStep(true); // Switch to OTP verification UI
+            setOtpStep(true);
+            setResendTimer(30);
         } else {
-            alert(result.message);
+            const toastCfg = { style: { borderRadius: '16px', background: '#1e293b', color: '#fff', fontSize: '10px', fontWeight: 'bold' } };
+            toast.error(result.message, toastCfg);
         }
         setLoading(false);
     };
@@ -34,10 +46,23 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         const result = await verifyOtp(email, otp);
+        const toastCfg = { style: { borderRadius: '16px', background: '#1e293b', color: '#fff', fontSize: '10px', fontWeight: 'bold' } };
         if (result.success) {
+            toast.success("Welcome Back!", toastCfg);
             navigate('/');
         } else {
-            alert(result.message || "Invalid OTP");
+            toast.error(result.message || "Invalid OTP", toastCfg);
+        }
+        setLoading(false);
+    };
+
+    const handleResendOtp = async () => {
+        if (resendTimer > 0) return;
+        setLoading(true);
+        const result = await login(email, password);
+        if (result.otpRequired) {
+            toast.success("New code dispatched!", { style: { borderRadius: '16px', background: '#1e293b', color: '#fff', fontSize: '10px', fontWeight: 'bold' } });
+            setResendTimer(30);
         }
         setLoading(false);
     };
@@ -116,6 +141,23 @@ const Login = () => {
                                     <button type="button" onClick={() => setOtpStep(false)} className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-1 mx-auto mt-4 hover:text-secondary">
                                         <ArrowLeft size={10} /> Back to Password
                                     </button>
+
+                                    <div className="flex flex-col items-center gap-2 pt-2">
+                                        {resendTimer > 0 ? (
+                                            <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                                                Resend OTP in <span className="text-secondary font-bold">{resendTimer}s</span>
+                                            </p>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={handleResendOtp}
+                                                disabled={loading}
+                                                className="text-[9px] font-black text-primary uppercase tracking-[0.2em] border-b border-primary/30 hover:text-secondary transition-all disabled:opacity-50"
+                                            >
+                                                Resend Code Now
+                                            </button>
+                                        )}
+                                    </div>
 
                                     <button type="submit" disabled={loading || otp.length < 6} className="w-full py-4 bg-emerald-500 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-emerald-600 active:scale-95 transition-all shadow-xl shadow-emerald-500/20">
                                         {loading ? 'Verifying...' : 'Validate & Enter'}

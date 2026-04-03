@@ -8,7 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const Notifications = () => {
-    const { user } = useAuth();
+    const { user, fetchUnreadCount } = useAuth();
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -33,6 +33,7 @@ const Notifications = () => {
         try {
             await api.patch(`/notifications/${id}/read`);
             setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+            fetchUnreadCount();
         } catch (e) { console.error(e); }
     };
 
@@ -40,6 +41,7 @@ const Notifications = () => {
         try {
             await api.patch(`/notifications/read-all/${user._id}`);
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            fetchUnreadCount();
         } catch (e) { console.error(e); }
     };
 

@@ -26,6 +26,7 @@ router.put('/:id', async (req, res) => {
             user.mobile = req.body.mobile || user.mobile;
             user.city = req.body.city || user.city;
             user.country = req.body.country || user.country;
+            user.profilePicture = req.body.profilePicture !== undefined ? req.body.profilePicture : user.profilePicture;
 
             if (req.body.password) {
                 if (!req.body.oldPassword) {

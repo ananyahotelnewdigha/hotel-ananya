@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Waves, Star, Coffee, Shield, MapPin, ChevronRight, Users, Award, Clock } from 'lucide-react';
 
@@ -41,6 +42,10 @@ const timeline = [
 
 const About = () => {
     const navigate = useNavigate();
+
+    React.useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
 
     return (
         <div className="min-h-screen bg-slate-50 pb-6 md:pb-10">

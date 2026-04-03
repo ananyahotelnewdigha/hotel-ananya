@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
+import { toast } from 'react-hot-toast';
 import {
     Mail, Lock, UserPlus, User, Eye, EyeOff, Sparkles, Phone,
     Globe, MapPin, Image as ImageIcon, Languages, Ticket,
@@ -18,6 +19,7 @@ const Signup = () => {
         termsAccepted: false
     });
     const [otp, setOtp] = useState('');
+    const [resendTimer, setResendTimer] = useState(0);
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
     const [picLoading, setPicLoading] = useState(false);
@@ -26,7 +28,30 @@ const Signup = () => {
 
     useEffect(() => {
         if (user) navigate('/');
+
+        // Restore progress on mount
+        const savedProgress = sessionStorage.getItem('signup_progress');
+        if (savedProgress) {
+            const { step: savedStep, formData: savedData } = JSON.parse(savedProgress);
+            setStep(savedStep);
+            setFormData(savedData);
+        }
     }, [user, navigate]);
+
+    // Persist progress on change
+    useEffect(() => {
+        if (step > 1 || formData.name) { // only store if user started filling
+            sessionStorage.setItem('signup_progress', JSON.stringify({ step, formData }));
+        }
+    }, [step, formData]);
+
+    useEffect(() => {
+        let timer;
+        if (resendTimer > 0) {
+            timer = setInterval(() => setResendTimer(prev => prev - 1), 1000);
+        }
+        return () => clearInterval(timer);
+    }, [resendTimer]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -58,25 +83,83 @@ const Signup = () => {
     };
 
     const validateStep = (s) => {
+        const toastCfg = {
+            style: {
+                borderRadius: '16px',
+                background: '#1e293b',
+                color: '#fff',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                border: '1px solid rgba(20, 184, 166, 0.2)'
+            },
+            iconTheme: {
+                primary: '#14b8a6',
+                secondary: '#fff',
+            },
+        };
+
         if (s === 1) {
-            if (!formData.name.trim()) { alert("Please enter your full name"); return false; }
-            if (!formData.email.trim()) { alert("Please enter a valid email address"); return false; }
-            if (formData.mobile.length !== 10) { alert("Mobile number must be exactly 10 digits"); return false; }
+            if (!formData.name.trim()) { toast.error("Please enter your full name", toastCfg); return false; }
+
+            // Email is now optional, but if provided, must be valid
+            if (formData.email.trim()) {
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(formData.email)) {
+                    toast.error("Please enter a valid email address", toastCfg);
+                    return false;
+                }
+            }
+
+            // Mobile number is mandatory (especially if email is missing)
+            if (formData.mobile.length !== 10) {
+                toast.error("Mobile number is required (10 digits)", toastCfg);
+                return false;
+            }
         }
         if (s === 2) {
-            if (!formData.password) { alert("Please set a security password"); return false; }
-            if (formData.password.length < 6) { alert("Password must be at least 6 characters"); return false; }
-            if (formData.password !== formData.confirmPassword) { alert("Passwords do not match"); return false; }
+            if (!formData.password) { toast.error("Please set a security password", toastCfg); return false; }
+            if (formData.password.length < 6) { toast.error("Password must be at least 6 characters", toastCfg); return false; }
+            if (formData.password !== formData.confirmPassword) { toast.error("Passwords do not match", toastCfg); return false; }
         }
         if (s === 3) {
-            if (!formData.country.trim()) { alert("Please specify your country"); return false; }
-            if (!formData.city.trim()) { alert("Please specify your city"); return false; }
+            if (!formData.country.trim()) { toast.error("Please specify your country", toastCfg); return false; }
+            if (!formData.city.trim()) { toast.error("Please specify your city", toastCfg); return false; }
         }
         return true;
     };
 
-    const nextStep = () => {
+    const nextStep = async () => {
         if (validateStep(step)) {
+            if (step === 1) {
+                setLoading(true);
+                try {
+                    const { data } = await api.post('/auth/check-availability', {
+                        email: formData.email,
+                        mobile: formData.mobile
+                    });
+                    if (!data.available) {
+                        toast.error(data.message, {
+                            style: {
+                                borderRadius: '16px',
+                                background: '#1e293b',
+                                color: '#fff',
+                                fontSize: '10px',
+                                fontWeight: 'bold',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.1em',
+                                border: '1px solid rgba(20, 184, 166, 0.2)'
+                            }
+                        });
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Availability check failed:", err);
+                } finally {
+                    setLoading(false);
+                }
+            }
             setStep(s => s + 1);
         }
     };
@@ -85,35 +168,81 @@ const Signup = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        const toastCfg = {
+            style: {
+                borderRadius: '16px',
+                background: '#1e293b',
+                color: '#fff',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                border: '1px solid rgba(20, 184, 166, 0.2)'
+            },
+            iconTheme: { primary: '#14b8a6', secondary: '#fff' }
+        };
+
         if (formData.password !== formData.confirmPassword) {
-            return alert("Passwords don't match");
+            return toast.error("Passwords don't match", toastCfg);
         }
         if (!formData.termsAccepted) {
-            return alert("Please accept the terms and conditions");
+            return toast.error("Please accept the terms and conditions", toastCfg);
         }
 
         setLoading(true);
         const result = await signup(formData);
         if (result.success) {
+            toast.success("Registration successful! Verify OTP.", toastCfg);
+            setResendTimer(30);
             setStep(5); // Go to OTP verification step
         } else {
-            alert(result.message);
+            toast.error(result.message, toastCfg);
+        }
+        setLoading(false);
+    };
+
+    const handleResendOtp = async () => {
+        if (resendTimer > 0) return;
+        setLoading(true);
+        const result = await signup(formData);
+        if (result.success) {
+            toast.success("New OTP sent to your mobile!", {
+                style: { borderRadius: '16px', background: '#1e293b', color: '#fff', fontSize: '10px', fontWeight: 'bold' }
+            });
+            setResendTimer(30);
         }
         setLoading(false);
     };
 
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
+        const toastCfg = {
+            style: {
+                borderRadius: '16px',
+                background: '#1e293b',
+                color: '#fff',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                border: '1px solid rgba(20, 184, 166, 0.2)'
+            },
+            iconTheme: { primary: '#14b8a6', secondary: '#fff' }
+        };
         setLoading(true);
         try {
-            const result = await verifyOtp(formData.email, otp);
+            // Identifier for backend lookup (Email is preferred, Mobile fallback)
+            const identifier = formData.email ? formData.email : formData.mobile;
+            const result = await verifyOtp(identifier, otp);
             if (result.success) {
+                toast.success("Welcome to Hotel Ananya!", toastCfg);
+                sessionStorage.removeItem('signup_progress'); // Clear on success
                 navigate('/');
             } else {
-                alert(result.message || "Invalid OTP");
+                toast.error(result.message || "Invalid OTP", toastCfg);
             }
         } catch (error) {
-            alert("Verification failed");
+            toast.error("Verification failed", toastCfg);
         } finally {
             setLoading(false);
         }
@@ -135,9 +264,9 @@ const Signup = () => {
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Mail size={10} className="text-primary" /> Email Address
+                                <Mail size={10} className="text-primary" /> Email Address (Optional)
                             </label>
-                            <input type="email" name="email" required value={formData.email} onChange={handleChange}
+                            <input type="email" name="email" value={formData.email} onChange={handleChange}
                                 placeholder="you@example.com"
                                 className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-4 py-3.5 rounded-xl outline-none transition-all text-secondary font-medium"
                             />
@@ -151,8 +280,16 @@ const Signup = () => {
                                 className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-sm px-4 py-3.5 rounded-xl outline-none transition-all text-secondary font-medium"
                             />
                         </div>
-                        <button onClick={nextStep} className="w-full flex items-center justify-center gap-3 py-4 bg-secondary text-white rounded-xl text-sm font-black uppercase tracking-widest hover:bg-primary transition-all active:scale-95 shadow-lg shadow-secondary/20 mt-4">
-                            Next Step <ChevronRight size={18} />
+                        <button
+                            onClick={nextStep}
+                            disabled={loading}
+                            className={`w-full flex items-center justify-center gap-3 py-4 ${loading ? 'bg-slate-400' : 'bg-secondary'} text-white rounded-xl text-sm font-black uppercase tracking-widest hover:bg-primary transition-all active:scale-95 shadow-lg shadow-secondary/20 mt-4 disabled:opacity-70 disabled:cursor-wait`}
+                        >
+                            {loading ? (
+                                <>Validating <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /></>
+                            ) : (
+                                <>Next Step <ChevronRight size={18} /></>
+                            )}
                         </button>
                     </div>
                 );
@@ -229,14 +366,11 @@ const Signup = () => {
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    <Languages size={10} className="text-primary" /> Language
+                                    <ShieldCheck size={10} className="text-primary" /> Concierge Access
                                 </label>
-                                <select name="preferredLanguage" value={formData.preferredLanguage} onChange={handleChange}
-                                    className="w-full bg-slate-50 border border-slate-200 text-sm px-4 py-3.5 rounded-xl outline-none text-secondary font-medium">
-                                    <option>English</option>
-                                    <option>Hindi</option>
-                                    <option>Bengali</option>
-                                </select>
+                                <div className="w-full bg-slate-50 border border-slate-100 text-[10px] px-4 py-3.5 rounded-xl text-secondary font-black uppercase tracking-widest flex items-center gap-2">
+                                    24 Hr Available <span className="text-[7px] text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Active</span>
+                                </div>
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -332,6 +466,34 @@ const Signup = () => {
                                 className="w-48 mx-auto bg-slate-100 border-2 border-slate-200 focus:border-emerald-500 text-2xl font-black text-center tracking-[0.5em] py-4 rounded-2xl outline-none"
                             />
                             <p className="text-[10px] text-slate-400 italic font-medium">Please check your mobile messages for the 6-digit code</p>
+
+                            <div className="flex flex-col items-center gap-2 pt-2">
+                                {resendTimer > 0 ? (
+                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                                        Resend OTP in <span className="text-secondary font-bold">{resendTimer}s</span>
+                                    </p>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={handleResendOtp}
+                                        disabled={loading}
+                                        className="text-[9px] font-black text-primary uppercase tracking-[0.2em] border-b border-primary/30 hover:text-secondary transition-all disabled:opacity-50"
+                                    >
+                                        Resend Code Now
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        sessionStorage.removeItem('signup_progress');
+                                        window.location.reload(); // Hard reset to recover Step 1
+                                    }}
+                                    className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-2 hover:text-primary transition-all underline underline-offset-4"
+                                >
+                                    Change Account Details
+                                </button>
+                            </div>
 
                             <button
                                 onClick={handleVerifyOtp}

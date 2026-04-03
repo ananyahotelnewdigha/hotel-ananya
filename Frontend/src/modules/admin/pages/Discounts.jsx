@@ -6,7 +6,7 @@ const Discounts = () => {
     const [discounts, setDiscounts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newCoupon, setNewCoupon] = useState({ code: '', type: 'Percentage', value: 0 });
+    const [newCoupon, setNewCoupon] = useState({ code: '', type: 'Percentage', value: '' });
 
     const fetchDiscounts = async () => {
         try {
@@ -30,7 +30,7 @@ const Discounts = () => {
             await api.post('/discounts', newCoupon);
             fetchDiscounts();
             setIsModalOpen(false);
-            setNewCoupon({ code: '', type: 'Percentage', value: 0 });
+            setNewCoupon({ code: '', type: 'Percentage', value: '' });
         } catch (error) {
             alert(error.response?.data?.message || 'Error creating coupon');
         }
@@ -95,7 +95,7 @@ const Discounts = () => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{newCoupon.type === 'Percentage' ? 'Factor (%)' : 'Magnitude (₹)'}</label>
-                                    <input required type="number" value={newCoupon.value} onChange={e => setNewCoupon({ ...newCoupon, value: Number(e.target.value) })}
+                                    <input required type="number" min="0" value={newCoupon.value} onChange={e => setNewCoupon({ ...newCoupon, value: e.target.value === '' ? '' : Math.max(0, Number(e.target.value)) })}
                                         className="w-full bg-slate-50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 py-3 lg:py-4 text-xs font-black outline-none focus:ring-2 focus:ring-primary/20 transition-all shadow-inner" />
                                 </div>
                             </div>
@@ -202,7 +202,7 @@ const Discounts = () => {
                     <p className="text-white/40 text-[9px] lg:text-[10px] font-black uppercase tracking-widest mb-8 lg:mb-12">Coupon yield: 18% contribution to monthly GTV.</p>
                     <div className="flex items-end gap-1.5 h-16 lg:h-24">
                         {[40, 20, 60, 30, 80, 50, 90].map((h, i) => (
-                            <div key={i} className="flex-1 bg-primary/10 hover:bg-primary transition-all rounded-t-lg lg:rounded-t-xl cursor-help shadow-inner" style={{ height: `${h}%` }} />
+                            <div key={i} title={`${h}%`} className="flex-1 bg-primary/10 hover:bg-primary transition-all rounded-t-lg lg:rounded-t-xl cursor-default shadow-inner" style={{ height: `${h}%` }} />
                         ))}
                     </div>
                 </div>

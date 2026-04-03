@@ -27,16 +27,15 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const { lastUpdated, sections } = req.body;
-        let terms = await Terms.findOne();
-        if (terms) {
-            terms.lastUpdated = lastUpdated || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            terms.sections = sections;
-            await terms.save();
-        } else {
-            terms = await Terms.create({ lastUpdated, sections });
-        }
+        const updateDoc = {
+            lastUpdated: lastUpdated || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            sections: sections || []
+        };
+
+        const terms = await Terms.findOneAndUpdate({}, updateDoc, { upsert: true, new: true, runValidators: true });
         res.status(200).json(terms);
     } catch (error) {
+        console.error('Update terms error:', error);
         res.status(500).json({ message: 'Error updating terms' });
     }
 });

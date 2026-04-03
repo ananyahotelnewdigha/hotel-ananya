@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { MapPin, Phone, Mail, Send, Clock, CheckCircle2, Instagram, Facebook, Twitter, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { MapPin, Phone, Mail, Send, Clock, CheckCircle2, Instagram, Facebook, Youtube, ExternalLink, X } from 'lucide-react';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -31,15 +32,38 @@ const contactInfo = [
 const SUBJECTS = ['Room Booking Inquiry', 'Restaurant Reservation', 'Special Event / Wedding', 'Spa Appointment', 'General Support', 'Feedback'];
 
 const Contact = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        const timer = setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }, 10);
+        return () => clearTimeout(timer);
+    }, [location.key]);
+
     const [form, setForm] = useState({
-        firstName: '',
-        lastName: '',
+        firstName: user?.name?.split(' ')[0] || '',
+        lastName: user?.name?.split(' ').slice(1).join(' ') || '',
         email: user?.email || '',
         phone: user?.mobile || '',
-        subject: SUBJECTS[0],
+        subject: location.state?.subject || SUBJECTS[0],
         message: ''
     });
+
+    useEffect(() => {
+        if (user) {
+            setForm(prev => ({
+                ...prev,
+                firstName: user.name?.split(' ')[0] || '',
+                lastName: user.name?.split(' ').slice(1).join(' ') || '',
+                email: user.email || '',
+                phone: user.mobile || ''
+            }));
+        }
+    }, [user]);
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -76,11 +100,20 @@ const Contact = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-6 md:pb-10">
+        <div className="min-h-screen bg-slate-50 pb-6 md:pb-10 animate-in slide-in-from-top-full duration-700 ease-out">
             {/* Dark Hero Header */}
             <div className="relative bg-secondary overflow-hidden">
                 <div className="absolute inset-0 opacity-10"
                     style={{ backgroundImage: 'radial-gradient(circle at 10% 90%, #c9a84c 0%, transparent 40%), radial-gradient(circle at 90% 10%, #c9a84c 0%, transparent 40%)' }} />
+
+                {/* Close Button */}
+                <button
+                    onClick={() => navigate(-1)}
+                    className="absolute top-6 right-6 z-20 p-2 bg-white/5 text-white/40 hover:text-white rounded-full transition-colors active:scale-90"
+                >
+                    <X size={20} />
+                </button>
+
                 <div className="relative z-10 px-6 pt-8 pb-1">
                     <span className="text-primary text-[8px] font-black uppercase tracking-[0.5em]">We're Here</span>
                     <h1 className="text-3xl font-serif text-white mt-2 lowercase leading-tight">
@@ -230,11 +263,15 @@ const Contact = () => {
                         <p className="text-secondary font-bold text-sm mt-0.5">Stay connected with Ananya</p>
                     </div>
                     <div className="flex gap-3">
-                        {[Instagram, Facebook, Twitter].map((Icon, i) => (
-                            <button key={i}
+                        {[
+                            { icon: Instagram, href: 'https://www.instagram.com/ananyahotelnewdigha?igsh=MThtOHBwdzh0cXd6MA==' },
+                            { icon: Facebook, href: 'https://www.facebook.com/share/18MzGLcKVr/' },
+                            { icon: Youtube, href: '#' }
+                        ].map(({ icon: Icon, href }, i) => (
+                            <a key={i} href={href} target="_blank" rel="noreferrer"
                                 className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all active:scale-90">
                                 <Icon size={18} />
-                            </button>
+                            </a>
                         ))}
                     </div>
                 </div>

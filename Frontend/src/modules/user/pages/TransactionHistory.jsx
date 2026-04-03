@@ -6,6 +6,26 @@ import { ArrowLeft, ArrowUpRight, ArrowDownLeft, Filter, Calendar, Search } from
 const TransactionHistory = () => {
     const navigate = useNavigate();
     const { transactions, loading } = useWallet();
+    const [searchTerm, setSearchTerm] = React.useState('');
+    const [filterType, setFilterType] = React.useState('all'); // all, credit, debit
+
+    const filteredTransactions = transactions.filter(t => {
+        const matchesSearch = t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.razorpay_payment_id?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesFilter = filterType === 'all' || t.type === filterType;
+
+        return matchesSearch && matchesFilter;
+    });
+
+    const cycleFilter = () => {
+        setFilterType(prev => {
+            if (prev === 'all') return 'credit';
+            if (prev === 'credit') return 'debit';
+            return 'all';
+        });
+    };
 
     if (loading) return (
         <div className="min-h-screen bg-white flex items-center justify-center">
@@ -37,24 +57,33 @@ const TransactionHistory = () => {
                     <div className="relative">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
                         <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Search..."
-                            className="w-full bg-white border border-slate-100 rounded-2xl pl-10 pr-4 py-3 text-[10px] font-bold outline-none"
+                            className="w-full bg-white border border-slate-100 rounded-2xl pl-10 pr-4 py-3 text-[10px] font-bold outline-none ring-primary/20 focus:ring-4 transition-all"
                         />
                     </div>
-                    <button className="bg-white border border-slate-100 rounded-2xl px-4 py-3 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-2">
-                        <Filter size={14} /> Filter
+                    <button
+                        onClick={cycleFilter}
+                        className={`border rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95
+                        ${filterType === 'all' ? 'bg-white border-slate-100 text-slate-400' : 'bg-primary/10 border-primary/20 text-primary'}`}
+                    >
+                        <Filter size={14} /> {filterType === 'all' ? 'Filter' : filterType}
                     </button>
                 </div>
 
                 {/* Date Grouped Transactions */}
                 <div className="space-y-4">
-                    {transactions.length === 0 ? (
+                    {filteredTransactions.length === 0 ? (
                         <div className="bg-white rounded-[2.5rem] p-20 text-center border border-slate-100">
                             <Calendar size={40} className="mx-auto text-slate-200 mb-4" />
-                            <p className="text-slate-400 font-serif italic text-sm">Your financial journey is yet to begin.</p>
+                            <p className="text-slate-400 font-serif italic text-sm">
+                                {searchTerm ? 'No results matching your query.' : 'Your financial journey is yet to begin.'}
+                            </p>
                         </div>
                     ) : (
-                        transactions.map((t) => (
+                        filteredTransactions.map((t) => (
                             <div key={t._id} className="bg-white rounded-[2rem] p-5 border border-slate-100 shadow-sm flex items-center gap-4 group hover:shadow-xl hover:shadow-primary/5 transition-all duration-500">
                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors
                                     ${t.type === 'credit' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>

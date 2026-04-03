@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 const AdminLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Close sidebar on route change (for mobile)
@@ -155,11 +155,15 @@ const AdminLayout = () => {
                             className="flex items-center space-x-2 lg:space-x-4 group cursor-pointer"
                         >
                             <div className="text-right hidden sm:block">
-                                <p className="text-xs font-extrabold text-secondary group-hover:text-primary transition-colors italic leading-none">Super Admin</p>
+                                <p className="text-xs font-extrabold text-secondary group-hover:text-primary transition-colors italic leading-none truncate max-w-[100px]">{user?.name || 'Super Admin'}</p>
                                 <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-1">L1 AUTH</p>
                             </div>
-                            <div className="w-8 h-8 lg:w-12 lg:h-12 bg-secondary text-primary rounded-lg lg:rounded-2xl flex items-center justify-center font-black text-xs lg:text-lg border-2 border-primary/20 group-hover:border-primary transition-all shadow-lg shadow-secondary/10 shrink-0">
-                                SA
+                            <div className="w-8 h-8 lg:w-12 lg:h-12 bg-secondary text-primary rounded-lg lg:rounded-2xl flex items-center justify-center font-black text-xs lg:text-lg border-2 border-primary/20 group-hover:border-primary transition-all shadow-lg shadow-secondary/10 shrink-0 overflow-hidden">
+                                {user?.profilePicture ? (
+                                    <img src={user.profilePicture} className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                    user?.name?.[0]?.toUpperCase() || 'SA'
+                                )}
                             </div>
                         </div>
                     </div>

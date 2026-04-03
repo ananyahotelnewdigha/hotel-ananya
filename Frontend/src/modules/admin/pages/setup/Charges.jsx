@@ -150,7 +150,13 @@ const Charges = () => {
                     <div className="absolute inset-0 bg-secondary/80 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
                     <div className="bg-white rounded-[2rem] lg:rounded-[3.5rem] w-full max-w-xl p-8 lg:p-12 relative z-10 animate-in zoom-in duration-300 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
                         <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 lg:top-10 lg:right-10 p-2 text-slate-400 hover:text-secondary hover:bg-slate-50 rounded-xl transition-all active:scale-90"><X size={20} /></button>
-                        <h2 className="text-xl lg:text-3xl font-black text-secondary lowercase capitalize tracking-tight mb-2 pr-10">{editingCharge ? 'Modify <span className="text-primary italic">Service</span>' : 'Initialize <span className="text-primary italic">Service</span>'}</h2>
+                        <h2 className="text-xl lg:text-3xl font-black text-secondary lowercase capitalize tracking-tight mb-2 pr-10">
+                            {editingCharge ? (
+                                <>Modify <span className="text-primary italic">Service</span></>
+                            ) : (
+                                <>Initialize <span className="text-primary italic">Service</span></>
+                            )}
+                        </h2>
                         <p className="text-[10px] lg:text-sm text-slate-500 mb-8 lg:mb-10 font-bold italic lowercase opacity-70">Define the value Proposition and operational category.</p>
 
                         <form onSubmit={handleSave} className="space-y-6 lg:space-y-8 text-left">
@@ -171,6 +177,7 @@ const Charges = () => {
                                     <input
                                         required
                                         type="number"
+                                        min="0"
                                         value={formData.amount}
                                         onChange={e => setFormData({ ...formData, amount: e.target.value })}
                                         className="w-full bg-slate-50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-3.5 lg:py-4.5 font-bold outline-none focus:ring-2 focus:ring-primary/20 shadow-inner text-sm lg:text-base"

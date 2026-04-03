@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
         const plans = await Pricing.find({}).populate({
             path: 'roomVariant',
             populate: { path: 'roomType' }
-        }).populate('ratePlan');
+        }).populate('ratePlan').sort({ createdAt: -1 });
         res.json(plans);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching all pricing plans' });

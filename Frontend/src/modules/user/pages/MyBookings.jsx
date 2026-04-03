@@ -339,9 +339,22 @@ const MyBookings = () => {
 
     const filtered = activeTab === 'All' ? bookings : bookings.filter(b => {
         const s = (b.bookingStatus || 'pending').toLowerCase();
-        if (activeTab === 'Upcoming') return s === 'confirmed' || s === 'pending';
+        const checkInDate = new Date(b.checkIn);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (activeTab === 'Upcoming') {
+            // Must be confirmed or pending AND check-in date must be today or in the future
+            return (s === 'confirmed' || s === 'pending') && checkInDate >= today;
+        }
+        if (activeTab === 'Completed') return s === 'completed' || (s === 'confirmed' && checkInDate < today);
         return s === activeTab.toLowerCase();
     });
+
+    // Special sort for Upcoming: Closest check-in first. Others: Newest creation first.
+    if (activeTab === 'Upcoming') {
+        filtered.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 pb-6 md:pb-10 relative">

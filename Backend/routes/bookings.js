@@ -2,9 +2,22 @@ import express from 'express';
 import Booking from '../models/Booking.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
+import Inventory from '../models/Inventory.js';
+import RoomVariant from '../models/RoomVariant.js';
 import { sendNotificationToUser, notifyAdmins } from '../utils/notificationHelper.js';
 
 const router = express.Router();
+
+const getDatesInRange = (startDate, endDate) => {
+    const dates = [];
+    let current = new Date(startDate);
+    const end = new Date(endDate);
+    while (current < end) {
+        dates.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+    }
+    return dates;
+};
 
 // @desc    Create a new booking (multifaceted)
 router.post('/', async (req, res) => {
@@ -18,6 +31,27 @@ router.post('/', async (req, res) => {
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
+        const variantDoc = await RoomVariant.findById(variant);
+        if (!variantDoc) return res.status(404).json({ message: 'Room Variant not found' });
+
+        // 1. Validate Availability for all dates
+        const datesInRange = getDatesInRange(checkIn, checkOut);
+
+        for (const date of datesInRange) {
+            const inventory = await Inventory.findOne({ roomVariant: variant, date });
+            const totalForDate = inventory?.roomsToSell ?? variantDoc.totalRooms;
+            const currentBooked = inventory?.bookedUnits ?? 0;
+
+            if (inventory?.isStopSell) {
+                return res.status(400).json({ message: `Rooms are closed for sale on ${new Date(date).toLocaleDateString()}` });
+            }
+
+            if (totalForDate - currentBooked < roomsCount) {
+                return res.status(400).json({ message: `Only ${totalForDate - currentBooked} rooms available for ${new Date(date).toLocaleDateString()}` });
+            }
+        }
+
+        // 2. Process Payment
         if (paymentMethod === 'wallet' && user.walletBalance < amountPaid) {
             return res.status(400).json({ message: 'Insufficient wallet balance' });
         }
@@ -27,7 +61,7 @@ router.post('/', async (req, res) => {
             await user.save();
         }
 
-        // Create transaction record for the amount actually paid
+        // 3. Create transaction record
         await Transaction.create({
             user: userId,
             type: 'debit',
@@ -35,7 +69,7 @@ router.post('/', async (req, res) => {
             description: `Room Booking #${bookingId} (${paymentStatus} payment) via ${paymentMethod}`
         });
 
-        // Create booking
+        // 4. Create booking
         const booking = await Booking.create({
             user: userId,
             roomType,
@@ -55,7 +89,19 @@ router.post('/', async (req, res) => {
             bookingStatus: 'confirmed'
         });
 
+        // 5. Update Inventory (Deduct availability)
         if (booking) {
+            for (const date of datesInRange) {
+                await Inventory.findOneAndUpdate(
+                    { roomVariant: variant, date },
+                    {
+                        $inc: { bookedUnits: roomsCount },
+                        $setOnInsert: { roomType, roomsToSell: variantDoc.totalRooms }
+                    },
+                    { upsert: true, new: true }
+                );
+            }
+
             // PUSH NOTIFICATION: User (Booking Success)
             await sendNotificationToUser(
                 userId,
@@ -97,7 +143,7 @@ router.get('/my/:userId', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const bookings = await Booking.find({})
-            .populate('user', 'name email mobile')
+            .populate('user', 'name email mobile profilePicture')
             .populate('roomType')
             .populate('variant')
             .populate({ path: 'plan', populate: { path: 'ratePlan' } })

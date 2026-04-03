@@ -13,6 +13,18 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Validate coupon
+router.post('/validate', async (req, res) => {
+    const { code } = req.body;
+    try {
+        const coupon = await Coupon.findOne({ code, active: true });
+        if (!coupon) return res.status(404).json({ success: false, message: 'Invalid or expired coupon' });
+        res.json({ success: true, coupon });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 // Create coupon
 router.post('/', async (req, res) => {
     try {

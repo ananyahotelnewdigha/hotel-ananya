@@ -5,7 +5,7 @@ import {
     Calendar, Users, ShieldCheck, ArrowRight, CreditCard,
     Wifi, Coffee, Wind, Tv, ChevronLeft, Star, MapPin,
     BedDouble, Maximize2, CheckCircle2, ChevronRight, Info, Plus, X, ChevronDown, Check,
-    Zap, Sparkles, Download
+    Zap, Sparkles, Download, Ticket
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../../services/api';
@@ -26,6 +26,13 @@ const BookingFlow = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const room = location.state?.room;
+
+    useEffect(() => {
+        if (user?.status === 'blocked') {
+            toast.error('Your account is currently restricted. Please contact support.', { icon: '🚫' });
+            navigate('/profile');
+        }
+    }, [user?.status]);
 
     const departureRef = useMemo(() => ({ current: null }), []); // Simple ref for showPicker
     const checkoutInputRef = (el) => departureRef.current = el;
@@ -55,6 +62,17 @@ const BookingFlow = () => {
     const [propertySettings, setPropertySettings] = useState({ payAtHotelEnabled: true, partialPaymentPercentage: 25 });
     const [bookingId] = useState(`AN-${Math.floor(Math.random() * 90000) + 10000}`);
     const [paymentPlan, setPaymentPlan] = useState('full'); // 'full' or 'partial'
+    const [couponCode, setCouponCode] = useState('');
+    const [discount, setDiscount] = useState(0);
+    const [couponApplied, setCouponApplied] = useState(false);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        const timer = setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }, 10);
+        return () => clearTimeout(timer);
+    }, [location.key]);
 
     useEffect(() => {
         api.get('/setup/property').then(res => {
@@ -158,6 +176,31 @@ const BookingFlow = () => {
         });
     }, [numRooms]);
 
+    const handleApplyCoupon = async () => {
+        if (!couponCode) return;
+        try {
+            const { data } = await api.post('/discounts/validate', { code: couponCode });
+            if (data.success) {
+                const c = data.coupon;
+                let d = 0;
+                if (c.type === 'percentage') {
+                    d = (totalBase + taxTotal) * (c.value / 100);
+                } else {
+                    d = c.value;
+                }
+                setDiscount(d);
+                setCouponApplied(true);
+                toast.success(`Coupon Applied! Extra ₹${Math.round(d).toLocaleString()} off`, {
+                    style: { borderRadius: '16px', background: '#1e293b', color: '#fff', fontSize: '10px', fontWeight: 'bold' }
+                });
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Invalid coupon", {
+                style: { borderRadius: '16px', background: '#1e293b', color: '#fff', fontSize: '10px', fontWeight: 'bold' }
+            });
+        }
+    };
+
     const handleCheckAvailability = async (variant) => {
         if (!dates.checkIn || !dates.checkOut) return alert('Please select dates first');
         setChecking(true);
@@ -166,7 +209,8 @@ const BookingFlow = () => {
                 roomTypeId: room._id,
                 variantId: variant._id,
                 checkIn: dates.checkIn,
-                checkOut: dates.checkOut
+                checkOut: dates.checkOut,
+                roomsCount: numRooms
             });
             if (data.available) {
                 setSelectedVariant(variant);
@@ -195,7 +239,7 @@ const BookingFlow = () => {
     const stayNights = nights(dates.checkIn, dates.checkOut);
     const totalBase = totalPrice;
     const taxTotal = taxes.reduce((sum, t) => sum + (totalBase * t.rate / 100), 0);
-    const grandTotal = totalBase + taxTotal;
+    const grandTotal = Math.max(0, (totalBase + taxTotal) - discount);
 
     const depositAmount = Math.round(grandTotal * (propertySettings.partialPaymentPercentage / 100));
     const amountToPayNow = paymentPlan === 'full' ? grandTotal : depositAmount;
@@ -663,6 +707,37 @@ const BookingFlow = () => {
                                         <span className="text-secondary tabular-nums">₹{(totalBase * t.rate / 100).toLocaleString()}</span>
                                     </div>
                                 ))}
+
+                                {couponApplied && (
+                                    <div className="flex justify-between text-[9px] font-bold text-emerald-600 animate-in slide-in-from-left-2">
+                                        <span className="uppercase tracking-widest">Promotional Voucher Applied</span>
+                                        <span className="tabular-nums">- ₹{Math.round(discount).toLocaleString()}</span>
+                                    </div>
+                                )}
+
+                                {/* Coupon Input */}
+                                <div className="mt-4 pt-4 border-t border-dashed border-slate-200">
+                                    <div className="relative flex gap-2">
+                                        <div className="relative flex-1">
+                                            <Ticket size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
+                                            <input
+                                                type="text"
+                                                placeholder="Enter Promotional Code"
+                                                value={couponCode}
+                                                disabled={couponApplied}
+                                                onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-sm pl-9 pr-4 py-2.5 text-[8px] font-bold uppercase tracking-widest outline-none focus:border-primary disabled:opacity-50"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleApplyCoupon}
+                                            disabled={couponApplied || !couponCode}
+                                            className={`px-6 rounded-sm text-[8px] font-black uppercase tracking-widest shadow-lg shadow-primary/10 transition-all ${couponApplied ? 'bg-emerald-500 text-white' : 'bg-primary text-secondary hover:brightness-110'}`}
+                                        >
+                                            {couponApplied ? <CheckCircle2 size={12} /> : 'Apply'}
+                                        </button>
+                                    </div>
+                                </div>
 
                                 <div className="pt-6 border-t border-slate-200 flex flex-col gap-1">
                                     {paymentPlan === 'partial' && (

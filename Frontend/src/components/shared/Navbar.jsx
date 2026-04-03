@@ -8,7 +8,7 @@ const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const location = useLocation();
-    const { user } = useAuth();
+    const { user, unreadCount } = useAuth();
     const { balance } = useWallet();
 
     // Pages that have a dark hero/background where white text is needed
@@ -70,6 +70,9 @@ const Navbar = () => {
                             <Link to="/notifications" className={`p-2.5 rounded-full border transition-all duration-500 relative ${isNavbarDark ? 'border-primary/20 text-primary hover:bg-primary hover:text-white' : 'border-white/20 text-white hover:bg-white hover:text-secondary'
                                 }`}>
                                 <Bell size={18} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white shadow-sm" />
+                                )}
                             </Link>
                             <Link to="/profile" className={`p-2.5 rounded-full border transition-all duration-500 ${isNavbarDark ? 'border-primary/20 text-primary hover:bg-primary hover:text-white' : 'border-white/20 text-white hover:bg-white hover:text-secondary'
                                 }`}>
@@ -87,8 +90,11 @@ const Navbar = () => {
                 {/* Mobile Actions */}
                 <div className="flex md:hidden items-center space-x-2">
                     {user && (
-                        <Link to="/notifications" className={`p-2 transition-all duration-300 ${isNavbarDark ? 'text-secondary' : 'text-white'}`}>
+                        <Link to="/notifications" className={`p-2 transition-all duration-300 relative ${isNavbarDark ? 'text-secondary' : 'text-white'}`}>
                             <Bell size={24} />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white" />
+                            )}
                         </Link>
                     )}
                     <button

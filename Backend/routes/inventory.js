@@ -50,9 +50,12 @@ router.get('/matrix', async (req, res) => {
 
             const availabilityRow = dates.map(date => {
                 const ov = overrideMap[date.toISOString()];
+                const totalForDate = ov?.roomsToSell ?? v.totalRooms;
+                const netAvailable = totalForDate - (ov?.bookedUnits || 0);
+
                 return {
                     date,
-                    roomsToSell: ov ? ov.roomsToSell : v.totalRooms,
+                    roomsToSell: netAvailable,
                     isStopSell: ov ? ov.isStopSell : false
                 };
             });
@@ -108,7 +111,7 @@ router.post('/save-batch', async (req, res) => {
                 ov = new Inventory({ roomVariant: targetId, roomType: variant.roomType, date, rates: [] });
             }
 
-            if (item.roomsToSell !== undefined) ov.roomsToSell = item.roomsToSell;
+            if (item.roomsToSell !== undefined) ov.roomsToSell = Math.max(0, parseInt(item.roomsToSell) || 0);
             if (item.isStopSell !== undefined) ov.isStopSell = item.isStopSell;
 
             if (item.planUpdates) {
@@ -146,6 +149,9 @@ router.post('/save-batch', async (req, res) => {
 router.post('/bulk-update', async (req, res) => {
     const { roomTypeId, variantId, fromDate, toDate, selectedDays, updates, planUpdates } = req.body;
     try {
+        if (updates && updates.roomsToSell !== undefined) {
+            updates.roomsToSell = Math.max(0, parseInt(updates.roomsToSell) || 0);
+        }
         const start = normalizeDate(fromDate);
         const end = normalizeDate(toDate);
         let current = new Date(start);

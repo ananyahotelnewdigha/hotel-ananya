@@ -54,7 +54,7 @@ const Profile = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-6 md:pb-10">
+        <div className="min-h-screen bg-slate-50 pb-28 md:pb-12 overflow-x-hidden font-sans">
             {/* Hero Profile Card */}
             <div className="relative bg-secondary overflow-hidden">
                 {/* Background pattern */}
@@ -114,17 +114,12 @@ const Profile = () => {
             {/* Menu below hero */}
             <div className="px-4 -mt-10 relative z-10 space-y-3">
                 {/* Loyalty Card */}
-                <div className="bg-white rounded-xl shadow-xl border border-slate-50 p-4 sticky top-4">
+                <div className="bg-white rounded-xl shadow-xl border border-slate-50 p-4 sticky top-4 overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-8 -mt-8" />
                     <div className="relative z-10 flex items-center justify-between">
                         <div>
                             <p className="text-[7px] font-bold text-primary uppercase tracking-widest">Ananya Loyalty</p>
                             <p className="text-secondary font-serif text-sm mt-0.5 lowercase capitalize">Gold Tier Member</p>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                            <Star size={12} fill="currentColor" className="text-amber-400" />
-                            <Star size={12} fill="currentColor" className="text-amber-400" />
-                            <Star size={12} fill="currentColor" className="text-amber-400" />
                         </div>
                     </div>
                 </div>

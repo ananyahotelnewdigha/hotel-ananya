@@ -36,10 +36,10 @@ const Transactions = () => {
             headers.join(','),
             ...transactions.map(t => [
                 t._id,
-                t.user?.name || 'Unknown',
+                `"${t.user?.name || 'Unknown'}"`,
                 t.type,
-                t.amount,
-                t.description,
+                t.type === 'credit' ? t.amount : `-${t.amount}`,
+                `"${t.description || ''}"`,
                 new Date(t.createdAt).toLocaleString()
             ].join(','))
         ].join('\n');

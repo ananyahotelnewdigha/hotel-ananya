@@ -4,6 +4,7 @@ import {
     Shield, Lock, Users, Gavel, DoorOpen, CreditCard, Ban, Globe, Anchor, FileWarning
 } from 'lucide-react';
 import api from '../../../../services/api';
+import { toast } from 'react-hot-toast';
 
 const ICONS = [
     'Shield', 'FileText', 'Lock', 'Users', 'AlertCircle', 'Scale',
@@ -15,47 +16,74 @@ const TermsMgmt = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
+    const fetchTerms = async () => {
+        try {
+            const { data } = await api.get('/terms');
+            setTerms({
+                ...data,
+                sections: Array.isArray(data.sections) ? data.sections : []
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchTerms = async () => {
-            try {
-                const { data } = await api.get('/terms');
-                setTerms(data);
-            } catch (err) { console.error(err); }
-            finally { setLoading(false); }
-        };
         fetchTerms();
     }, []);
 
     const handleAdd = () => {
-        setTerms(prev => ({
-            ...prev,
-            sections: [...prev.sections, { icon: 'FileText', title: '', content: '' }]
-        }));
+        setTerms(prev => {
+            const currentSections = Array.isArray(prev?.sections) ? prev.sections : [];
+            return {
+                ...prev,
+                sections: [...currentSections, { icon: 'FileText', title: '', content: '' }]
+            };
+        });
+        toast.success('New legal clause initialized.');
     };
 
     const handleRemove = (idx) => {
         setTerms(prev => ({
             ...prev,
-            sections: prev.sections.filter((_, i) => i !== idx)
+            sections: (prev.sections || []).filter((_, i) => i !== idx)
         }));
     };
 
     const handleSectionChange = (idx, field, val) => {
-        const newSections = [...terms.sections];
-        newSections[idx][field] = val;
-        setTerms({ ...terms, sections: newSections });
+        setTerms(prev => {
+            const newSections = (prev.sections || []).map((section, i) =>
+                i === idx ? { ...section, [field]: val } : section
+            );
+            return { ...prev, sections: newSections };
+        });
     };
 
     const handleSave = async () => {
         setSaving(true);
         try {
-            await api.post('/terms', terms);
-            alert('Legal protocols synchronized successfully.');
-        } catch (err) { alert('Synchronization failure.'); }
-        finally { setSaving(false); }
+            // Only send the data fields to avoid versioning or ID conflicts
+            const payload = {
+                lastUpdated: terms.lastUpdated,
+                sections: terms.sections
+            };
+            await api.post('/terms', payload);
+            toast.success('Legal protocols synchronized successfully.');
+        } catch (err) {
+            console.error('Save error:', err);
+            toast.error('Synchronization failure.');
+        } finally {
+            setSaving(false);
+        }
     };
 
-    if (loading) return <div className="p-20 text-center text-primary animate-pulse font-black text-xs tracking-widest uppercase">Initializing Legal Vault...</div>;
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
     return (
         <div className="space-y-10 animate-in fade-in duration-700 text-left pb-20">
@@ -65,8 +93,8 @@ const TermsMgmt = () => {
                     <p className="text-[10px] lg:text-xs text-slate-400 font-medium tracking-tight mt-1">Configure the terms and conditions governing the Ananya platform.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleAdd} className="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2">
-                        <Plus size={14} /> Add Clause
+                    <button type="button" onClick={handleAdd} className="px-6 py-3 bg-white border border-slate-900 text-secondary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2">
+                        <Plus size={14} strokeWidth={3} /> ADD CLAUSE
                     </button>
                     <button
                         onClick={handleSave}
@@ -102,9 +130,10 @@ const TermsMgmt = () => {
                 </div>
 
                 <div className="space-y-6">
-                    {terms.sections.map((section, idx) => (
+                    {(terms.sections || []).map((section, idx) => (
                         <div key={idx} className="bg-white p-6 lg:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-in slide-in-from-bottom-4 duration-500 delay-100 relative group hover:border-primary/20 transition-colors">
                             <button
+                                type="button"
                                 onClick={() => handleRemove(idx)}
                                 className="absolute top-6 right-6 p-2 text-slate-300 hover:text-rose-500 transition-colors"
                             >
@@ -116,15 +145,17 @@ const TermsMgmt = () => {
                                     <div className="space-y-1.5">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Visual Token</label>
                                         <div className="grid grid-cols-4 gap-2">
-                                            {ICONS.map(icon => (
+                                            {ICONS.map(iconName => (
                                                 <button
-                                                    key={icon}
-                                                    onClick={() => handleSectionChange(idx, 'icon', icon)}
+                                                    key={iconName}
+                                                    type="button"
+                                                    onClick={() => handleSectionChange(idx, 'icon', iconName)}
                                                     className={`p-2 rounded-lg border flex items-center justify-center transition-all 
-                                                        ${section.icon === icon ? 'bg-primary border-primary text-secondary scale-110 shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-primary/30'}`}
+                                                        ${section.icon === iconName ? 'bg-primary border-primary text-secondary scale-110 shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-primary/30'}`}
                                                 >
                                                     {(() => {
-                                                        const IconComp = { Shield, FileText, Lock, Users, AlertCircle, Scale, Gavel, DoorOpen, CreditCard, Ban, Globe, Anchor, FileWarning }[icon];
+                                                        const icons = { Shield, FileText, Lock, Users, AlertCircle, Scale, Gavel, DoorOpen, CreditCard, Ban, Globe, Anchor, FileWarning };
+                                                        const IconComp = icons[iconName] || FileText;
                                                         return <IconComp size={14} />;
                                                     })()}
                                                 </button>
@@ -160,11 +191,11 @@ const TermsMgmt = () => {
                     ))}
                 </div>
 
-                {terms.sections.length === 0 && (
+                {(!terms.sections || terms.sections.length === 0) && (
                     <div className="py-20 text-center bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
                         <FileText size={40} className="mx-auto text-slate-200 mb-4" />
                         <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">No legal clauses detected in the ledger.</p>
-                        <button onClick={handleAdd} className="mt-4 text-primary font-black text-[9px] uppercase tracking-widest border-b border-primary/40">Initialize First Clause</button>
+                        <button type="button" onClick={handleAdd} className="mt-4 text-primary font-black text-[9px] uppercase tracking-widest border-b border-primary/40">Initialize First Clause</button>
                     </div>
                 )}
             </div>

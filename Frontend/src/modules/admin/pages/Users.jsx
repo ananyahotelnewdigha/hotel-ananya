@@ -136,10 +136,21 @@ const Users = () => {
                                             }
                                         </td>
                                         <td className="px-6 py-5">
-                                            <p className="font-bold text-secondary uppercase tracking-tight leading-none mb-1">{u.name}</p>
-                                            <div className="flex items-center gap-1.5 text-slate-400">
-                                                <Mail size={10} className="text-primary" />
-                                                <span className="text-[9px] font-bold truncate">{u.email}</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-primary font-bold overflow-hidden shrink-0">
+                                                    {u.profilePicture ? (
+                                                        <img src={u.profilePicture} alt={u.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        u.name[0]
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-secondary uppercase tracking-tight leading-none mb-1 truncate">{u.name}</p>
+                                                    <div className="flex items-center gap-1.5 text-slate-400">
+                                                        <Mail size={10} className="text-primary" />
+                                                        <span className="text-[9px] font-bold truncate">{u.email}</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">

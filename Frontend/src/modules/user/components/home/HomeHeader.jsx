@@ -5,7 +5,7 @@ import { useAuth } from '../../../../context/AuthContext';
 
 const HomeHeader = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, unreadCount } = useAuth();
 
     return (
         <div className="md:hidden sticky top-0 bg-white/95 backdrop-blur-xl z-50 border-b border-slate-100 px-4 py-3 shadow-sm">
@@ -26,10 +26,13 @@ const HomeHeader = () => {
                         <Settings size={18} strokeWidth={1.5} />
                     </button>
                     <button
-                        onClick={() => navigate('/profile')}
-                        className="p-2 text-secondary active:scale-95 transition-all"
+                        onClick={() => navigate('/notifications')}
+                        className="p-2 text-secondary active:scale-95 transition-all relative"
                     >
                         <Bell size={18} strokeWidth={1.5} />
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white" />
+                        )}
                     </button>
                     {user ? (
                         <div

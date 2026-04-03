@@ -49,11 +49,12 @@ const Messages = () => {
     };
 
     const filteredMessages = messages.filter(msg => {
+        const cleanSearchTerm = searchTerm.replace(/\s/g, '').toLowerCase();
         const matchesSearch =
-            msg.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            msg.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            msg.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            msg.subject?.toLowerCase().includes(searchTerm.toLowerCase());
+            (msg.firstName || '').toLowerCase().replace(/\s/g, '').includes(cleanSearchTerm) ||
+            (msg.lastName || '').toLowerCase().replace(/\s/g, '').includes(cleanSearchTerm) ||
+            (msg.email || '').toLowerCase().replace(/\s/g, '').includes(cleanSearchTerm) ||
+            (msg.subject || '').toLowerCase().replace(/\s/g, '').includes(cleanSearchTerm);
 
         const matchesFilter = filterStatus === 'all' || msg.status === filterStatus;
 

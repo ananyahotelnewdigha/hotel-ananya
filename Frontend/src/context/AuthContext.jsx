@@ -8,6 +8,19 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [role, setRole] = useState('user');
     const [loading, setLoading] = useState(true);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const fetchUnreadCount = async (uid) => {
+        const id = uid || user?._id;
+        if (!id) return;
+        try {
+            const { data } = await api.get(`/notifications/my/${id}`);
+            const count = data.filter(n => !n.isRead).length;
+            setUnreadCount(count);
+        } catch (e) {
+            console.error('Unread count fetch failed:', e);
+        }
+    };
 
     useEffect(() => {
         const savedUser = localStorage.getItem('hotel_user');
@@ -16,11 +29,19 @@ export const AuthProvider = ({ children }) => {
             setUser(parsed);
             setRole(parsed.role || 'user');
 
-            // SMARTER RECOVERY: Ensure push notifications are active for current session
-            // We check this every time a session is loaded
+            // REFRESH STATUS: Ensure user status (active/blocked) is synced with backend on every mount
             if (parsed._id) {
-                console.log('Ensuring Push Token is synchronized for existing user...');
+                api.get(`/auth/me/${parsed._id}`).then(res => {
+                    const freshData = res.data;
+                    if (freshData) {
+                        setUser(freshData);
+                        setRole(freshData.role || 'user');
+                        localStorage.setItem('hotel_user', JSON.stringify(freshData));
+                    }
+                }).catch(e => console.error('Status sync failed:', e));
+
                 requestPermissionAndGetToken(parsed._id);
+                fetchUnreadCount(parsed._id);
             }
         }
         setLoading(false);
@@ -94,7 +115,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, role, login, signup, verifyOtp, logout, updateProfile, loading }}>
+        <AuthContext.Provider value={{ user, role, login, signup, verifyOtp, logout, updateProfile, loading, unreadCount, fetchUnreadCount }}>
             {children}
         </AuthContext.Provider>
     );

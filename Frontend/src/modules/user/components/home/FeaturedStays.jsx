@@ -1,10 +1,39 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Heart } from 'lucide-react';
+import { Star, Heart, Share2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { roomCategories } from '../../../../utils/roomData';
+import { useAuth } from '../../../../context/AuthContext';
 
 const FeaturedStays = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const isBlocked = user?.status === 'blocked';
+    const [likedRooms, setLikedRooms] = React.useState(new Set());
+
+    const toggleLike = (index) => {
+        setLikedRooms(prev => {
+            const next = new Set(prev);
+            if (next.has(index)) next.delete(index);
+            else next.add(index);
+            return next;
+        });
+    };
+
+    const handleShare = (room) => {
+        const shareData = {
+            title: `Hotel Ananya - ${room.type}`,
+            text: `Check out this amazing ${room.type} at Hotel Ananya!`,
+            url: window.location.origin + '/rooms'
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData).catch(() => { });
+        } else {
+            navigator.clipboard.writeText(shareData.url);
+            toast.success('Link copied to clipboard');
+        }
+    };
 
     return (
         <section className="py-6 bg-white border-b border-slate-100">
@@ -21,16 +50,21 @@ const FeaturedStays = () => {
                 {roomCategories.map((room, i) => (
                     <div
                         key={i}
-                        onClick={() => navigate('/rooms', { state: { initialSearch: room.type } })}
-                        className="flex-shrink-0 w-[75vw] bg-white rounded-xl border border-slate-100 shadow-md overflow-hidden snap-center group cursor-pointer active:scale-95 transition-all"
+                        onClick={() => !isBlocked && navigate('/rooms', { state: { initialSearch: room.type } })}
+                        className={`flex-shrink-0 w-[75vw] bg-white rounded-xl border border-slate-100 shadow-md overflow-hidden snap-center group transition-all
+                            ${isBlocked ? 'opacity-70 cursor-not-allowed grayscale-[0.3]' : 'active:scale-95 cursor-pointer'}`}
                     >
                         <div className="relative h-40 overflow-hidden">
                             <img src={room.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={room.type} />
-                            <div
-                                onClick={(e) => { e.stopPropagation(); }}
-                                className="absolute top-3 right-3 p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white hover:text-rose-500 transition-all"
-                            >
-                                <Heart size={14} />
+
+                            {/* Action Cluster */}
+                            <div className="absolute top-3 right-3 flex flex-col gap-2">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleShare(room); }}
+                                    className="p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white hover:text-primary transition-all active:scale-90"
+                                >
+                                    <Share2 size={14} />
+                                </button>
                             </div>
                             <div className="absolute bottom-3 left-3 flex items-center space-x-1.5">
                                 <span className="bg-primary px-2 py-0.5 text-[7px] font-bold text-white uppercase tracking-widest rounded-md">Luxury</span>
@@ -44,12 +78,19 @@ const FeaturedStays = () => {
                             <h4 className="text-sm font-bold text-secondary truncate uppercase tracking-tight">{room.type}</h4>
                             <div className="flex items-center justify-between">
                                 <p className="text-primary font-bold text-lg">₹{room.price}<span className="text-[8px] text-slate-400 font-normal uppercase ml-1">/ Night</span></p>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); navigate('/rooms', { state: { initialSearch: room.type } }); }}
-                                    className="bg-secondary text-white text-[8px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest active:scale-90 transition-all shadow-sm"
-                                >
-                                    Book
-                                </button>
+                                {!isBlocked ? (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); navigate('/rooms', { state: { initialSearch: room.type } }); }}
+                                        className="bg-secondary text-white text-[8px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest active:scale-90 transition-all shadow-sm"
+                                    >
+                                        Book
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
+                                        <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                                        <span className="text-[7px] font-black text-rose-500 uppercase tracking-widest">Restricted</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

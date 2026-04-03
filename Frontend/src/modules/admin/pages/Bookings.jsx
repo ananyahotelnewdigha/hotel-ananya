@@ -115,8 +115,7 @@ const Bookings = () => {
                     <table className="w-full min-w-[1100px] border-collapse">
                         <thead>
                             <tr className="bg-slate-50 text-[9px] uppercase font-black tracking-[0.15em] text-slate-500 border-b border-slate-200">
-                                <th className="px-6 py-5 text-left sticky left-0 bg-slate-50 z-10 border-r border-slate-100">Status</th>
-                                <th className="px-6 py-5 text-left">Identity</th>
+                                <th className="px-6 py-5 text-left sticky left-0 bg-slate-50 z-10 border-r border-slate-100">Identity</th>
                                 <th className="px-6 py-5 text-left">Contact</th>
                                 <th className="px-6 py-5 text-center">Ref/Date</th>
                                 <th className="px-6 py-5 text-left">Category</th>
@@ -128,25 +127,27 @@ const Bookings = () => {
                         <tbody className="divide-y divide-slate-100">
                             {filtered.length === 0 ? (
                                 <tr>
-                                    <td colSpan="8" className="py-20 text-center">
+                                    <td colSpan="7" className="py-20 text-center">
                                         <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em]">No records found.</p>
                                     </td>
                                 </tr>
                             ) : (
                                 filtered.map((bk) => (
                                     <tr key={bk._id} className="hover:bg-slate-50/50 transition-all text-xs border-b border-slate-50 last:border-0 group">
-                                        <td className="px-6 py-5 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
-                                            <span className={`inline-block px-2 py-0.5 rounded-sm text-[7px] font-black uppercase tracking-widest border ${bk.bookingStatus === 'confirmed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                bk.bookingStatus === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    bk.bookingStatus === 'cancelled' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                                                        'bg-blue-50 text-blue-600 border-blue-100'
-                                                }`}>
-                                                {bk.bookingStatus}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <p className="font-bold text-secondary uppercase tracking-tight leading-none mb-1">{bk.user?.name}</p>
-                                            <p className="text-[8px] text-slate-400 uppercase tracking-widest leading-none truncate">{bk.user?.email}</p>
+                                        <td className="px-6 py-4 sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-100">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-primary font-black overflow-hidden shrink-0">
+                                                    {bk.user?.profilePicture ? (
+                                                        <img src={bk.user.profilePicture} alt={bk.user.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        bk.user?.name?.[0] || '?'
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-secondary uppercase tracking-tight leading-none mb-1 truncate">{bk.user?.name}</p>
+                                                    <p className="text-[8px] text-slate-400 uppercase tracking-widest leading-none truncate">{bk.user?.email}</p>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-1.5 text-secondary font-bold">

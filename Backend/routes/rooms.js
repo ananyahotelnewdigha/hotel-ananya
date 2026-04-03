@@ -86,18 +86,17 @@ router.post('/variants-with-pricing', async (req, res) => {
                 date: { $gte: start, $lt: end }
             }) : [];
 
-            if (overrides.length > 0) {
+            if (start && end) {
                 isStopped = overrides.some(o => o.isStopSell);
                 // Pre-calculate min availability for the range
-                for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+                const rangeStart = new Date(start);
+                for (let d = new Date(rangeStart); d < end; d.setDate(d.getDate() + 1)) {
                     const dateStr = d.toISOString().split('T')[0];
                     const override = overrides.find(o => o.date.toISOString().split('T')[0] === dateStr);
-                    let dayTotal = roomType.totalRooms;
-                    if (override && override.roomsToSell !== undefined) dayTotal = override.roomsToSell;
-                    if (dayTotal < minAvail) minAvail = dayTotal;
+                    const totalForDate = override?.roomsToSell ?? v.totalRooms;
+                    const netAvailable = totalForDate - (override?.bookedUnits || 0);
+                    if (netAvailable < minAvail) minAvail = netAvailable;
                 }
-            } else if (start && end) {
-                minAvail = roomType.totalRooms; // Default if no overrides found
             }
 
             for (const plan of plans) {
@@ -141,7 +140,8 @@ router.post('/variants-with-pricing', async (req, res) => {
                 basePrice: avgPrice,
                 pricingPlanMeta: plans.length > 0 ? plans[0] : null,
                 isSoldOut: minAvail <= 0,
-                isStopSell: isStopped
+                isStopSell: isStopped,
+                availableCount: minAvail
             };
         }));
 
@@ -337,10 +337,11 @@ router.get('/:id', async (req, res) => {
 
 // @desc    Check availability (multifaceted)
 router.post('/check-availability', async (req, res) => {
-    const { roomTypeId, variantId, checkIn, checkOut } = req.body;
+    const { roomTypeId, variantId, checkIn, checkOut, roomsCount = 1 } = req.body;
     try {
         const roomType = await RoomType.findById(roomTypeId);
-        if (!roomType) return res.status(404).json({ message: 'Room type not found' });
+        const variant = await RoomVariant.findById(variantId);
+        if (!roomType || !variant) return res.status(404).json({ message: 'Room/Variant not found' });
 
         const start = normalizeDate(checkIn);
         const end = normalizeDate(checkOut);
@@ -355,39 +356,28 @@ router.post('/check-availability', async (req, res) => {
             return res.json({ available: false, message: 'Dates are blocked (Stop Sell)' });
         }
 
-        const searchCriteria = {
-            roomType: roomTypeId,
-            bookingStatus: { $in: ['pending', 'confirmed'] },
-            $or: [{ checkIn: { $lt: checkOut }, checkOut: { $gt: checkIn } }]
-        };
-
-        if (variantId) searchCriteria.variant = variantId;
-
-        const existingBookings = await Booking.find(searchCriteria);
-
-        // For each day, check availability
+        // Use Inventory recorded availability for all days
         let minAvailable = Infinity;
         for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
             const dateStr = d.toISOString().split('T')[0];
             const override = overrides.find(o => o.date.toISOString().split('T')[0] === dateStr);
 
-            const bookedOnThisDay = existingBookings.filter(b =>
-                new Date(b.checkIn) < new Date(d.getTime() + 86400000) && new Date(b.checkOut) > d
-            ).reduce((sum, b) => sum + b.roomsCount, 0);
+            const totalForDate = override?.roomsToSell ?? variant.totalRooms;
+            const currentBooked = override?.bookedUnits ?? 0;
+            const dayAvailable = totalForDate - currentBooked;
 
-            let dayTotal = roomType.totalRooms;
-            if (override && override.roomsToSell !== undefined) dayTotal = override.roomsToSell;
-
-            const dayAvailable = dayTotal - bookedOnThisDay;
             if (dayAvailable < minAvailable) minAvailable = dayAvailable;
         }
 
+        const countAvailable = minAvailable === Infinity ? variant.totalRooms : Math.max(0, minAvailable);
+
         res.json({
-            available: minAvailable > 0,
-            availableCount: minAvailable === Infinity ? roomType.totalRooms : Math.max(0, minAvailable),
-            totalRooms: roomType.totalRooms
+            available: countAvailable >= roomsCount,
+            availableCount: countAvailable,
+            totalRooms: variant.totalRooms
         });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: 'Availability check failed' });
     }
 });

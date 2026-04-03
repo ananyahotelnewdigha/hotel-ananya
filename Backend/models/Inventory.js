@@ -5,6 +5,7 @@ const inventorySchema = new mongoose.Schema({
     roomVariant: { type: mongoose.Schema.Types.ObjectId, ref: 'RoomVariant', required: true },
     date: { type: Date, required: true },
     roomsToSell: { type: Number }, // Manual override of rooms available for this date
+    bookedUnits: { type: Number, default: 0 }, // Track actual occupancy
     isStopSell: { type: Boolean, default: false }, // Manual block
     rates: [{
         pricingPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'Pricing' },

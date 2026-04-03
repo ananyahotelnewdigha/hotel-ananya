@@ -3,7 +3,7 @@ import api from '../../../services/api';
 import { Plus, Edit2, Trash2, X, ChevronDown, Layers, Upload } from 'lucide-react';
 import { getAmenityIcon, commonAmenityNames } from '../../../utils/amenityIcons';
 
-const EMPTY_FORM = { roomType: '', name: '', totalRooms: 5, images: '', amenities: '', isActive: true };
+const EMPTY_FORM = { roomType: '', name: '', totalRooms: '', images: '', amenities: '', isActive: true };
 
 const VariantMgmt = () => {
     const [roomTypes, setRoomTypes] = useState([]);
@@ -77,6 +77,7 @@ const VariantMgmt = () => {
         e.preventDefault();
         const payload = {
             ...formData,
+            totalRooms: parseInt(formData.totalRooms) || 0,
             images: formData.images ? formData.images.split(',').map(s => s.trim()).filter(Boolean) : [],
             amenities: formData.amenities ? formData.amenities.split(',').map(s => s.trim()).filter(Boolean) : []
         };
@@ -179,7 +180,7 @@ const VariantMgmt = () => {
                                     <div className="flex items-center gap-1.5 bg-slate-50/50 px-3 py-2 rounded-xl">
                                         <Layers size={12} className="text-primary" />
                                         <p className="text-sm font-black text-secondary tabular-nums">{v.totalRooms}</p>
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Units</p>
+                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Availability</p>
                                     </div>
                                     <span className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border shadow-sm ${v.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
                                         {v.isActive ? 'Active' : 'Halted'}
@@ -230,10 +231,10 @@ const VariantMgmt = () => {
 
                             {/* Total Rooms */}
                             <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Number of Rooms</label>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Room Availability <span className="text-rose-500">*</span></label>
                                 <input type="number" required min="1"
                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-xs font-bold font-mono outline-none"
-                                    value={formData.totalRooms} onChange={e => setFormData(f => ({ ...f, totalRooms: parseInt(e.target.value) || 1 }))} />
+                                    value={formData.totalRooms} onChange={e => setFormData(f => ({ ...f, totalRooms: e.target.value }))} />
                             </div>
 
                             {/* Images */}

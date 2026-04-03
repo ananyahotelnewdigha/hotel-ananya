@@ -14,17 +14,6 @@ const Availability = () => {
     const [selectedRT, setSelectedRT] = useState('all');
     const [pendingUpdates, setPendingUpdates] = useState({});
 
-    // Bulk Update State
-    const [showBulkModal, setShowBulkModal] = useState(false);
-    const [bulkForm, setBulkForm] = useState({
-        variantId: '',
-        fromDate: new Date().toISOString().split('T')[0],
-        toDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-        roomsToSell: '',
-        isStopSell: false,
-        days: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: true, sun: true }
-    });
-
     const fetchData = async (s = startDate) => {
         setLoading(true);
         try {
@@ -53,6 +42,7 @@ const Availability = () => {
     };
 
     const updateCell = (variantId, date, field, value) => {
+        const sanitizedValue = field === 'roomsToSell' ? Math.max(0, value) : value;
         const key = `${variantId}-${date}`;
         setPendingUpdates(prev => ({
             ...prev,
@@ -63,7 +53,7 @@ const Availability = () => {
                     roomsToSell: matrix.find(m => m._id === variantId).availability.find(a => a.date === date).roomsToSell,
                     isStopSell: matrix.find(m => m._id === variantId).availability.find(a => a.date === date).isStopSell
                 }),
-                [field]: value
+                [field]: sanitizedValue
             }
         }));
 
@@ -73,7 +63,7 @@ const Availability = () => {
                 ...m,
                 availability: m.availability.map(a => {
                     if (a.date !== date) return a;
-                    return { ...a, [field]: value };
+                    return { ...a, [field]: sanitizedValue };
                 })
             };
         }));
@@ -81,26 +71,67 @@ const Availability = () => {
 
     const handleCopyAvailability = (variantId) => {
         const row = matrix.find(m => m._id === variantId);
-        if (!row) return;
+        if (!row || !row.availability?.length) return;
         const firstVal = row.availability[0].roomsToSell;
+
+        const newPending = { ...pendingUpdates };
         row.availability.forEach(a => {
-            updateCell(variantId, a.date, 'roomsToSell', firstVal);
+            const key = `${variantId}-${a.date}`;
+            newPending[key] = {
+                ...(newPending[key] || {
+                    variantId,
+                    date: a.date,
+                    roomsToSell: a.roomsToSell,
+                    isStopSell: a.isStopSell
+                }),
+                roomsToSell: firstVal
+            };
         });
+
+        setPendingUpdates(newPending);
+        setMatrix(prev => prev.map(m => {
+            if (m._id !== variantId) return m;
+            return {
+                ...m,
+                availability: m.availability.map(a => ({ ...a, roomsToSell: firstVal }))
+            };
+        }));
     };
 
     const handleStopSellAll = (variantId, checked) => {
         const row = matrix.find(m => m._id === variantId);
-        if (!row) return;
+        if (!row || !row.availability?.length) return;
+
+        const newPending = { ...pendingUpdates };
         row.availability.forEach(a => {
-            updateCell(variantId, a.date, 'isStopSell', checked);
+            const key = `${variantId}-${a.date}`;
+            newPending[key] = {
+                ...(newPending[key] || {
+                    variantId,
+                    date: a.date,
+                    roomsToSell: a.roomsToSell,
+                    isStopSell: a.isStopSell
+                }),
+                isStopSell: checked
+            };
         });
+
+        setPendingUpdates(newPending);
+        setMatrix(prev => prev.map(m => {
+            if (m._id !== variantId) return m;
+            return {
+                ...m,
+                availability: m.availability.map(a => ({ ...a, isStopSell: checked }))
+            };
+        }));
     };
 
     const updateTotalRooms = async (variantId, newTotal) => {
+        const sanitizedTotal = Math.max(0, newTotal);
         setSaving(true);
         try {
-            await api.put(`/rooms/variants/${variantId}`, { totalRooms: newTotal });
-            setMatrix(prev => prev.map(m => m._id === variantId ? { ...m, totalRooms: newTotal } : m));
+            await api.put(`/rooms/variants/${variantId}`, { totalRooms: sanitizedTotal });
+            setMatrix(prev => prev.map(m => m._id === variantId ? { ...m, totalRooms: sanitizedTotal } : m));
         } catch (e) {
             alert('Failed to update base capacity');
         } finally {
@@ -108,30 +139,7 @@ const Availability = () => {
         }
     };
 
-    const handleBulkUpdate = async () => {
-        if (!bulkForm.variantId || bulkForm.variantId === 'all') return alert('Please select a room type.');
-        setSaving(true);
-        try {
-            const payload = {
-                variantId: bulkForm.variantId,
-                fromDate: bulkForm.fromDate,
-                toDate: bulkForm.toDate,
-                selectedDays: bulkForm.days,
-                updates: {}
-            };
-            if (bulkForm.roomsToSell !== '') payload.updates.roomsToSell = parseInt(bulkForm.roomsToSell);
-            if (bulkForm.isStopSell) payload.updates.isStopSell = true;
 
-            await api.post('/inventory/bulk-update', payload);
-            alert('Bulk update successful');
-            setShowBulkModal(false);
-            fetchData();
-        } catch (e) {
-            alert('Bulk update failed');
-        } finally {
-            setSaving(false);
-        }
-    };
 
     const handleSaveMatrix = async () => {
         const updates = Object.values(pendingUpdates);
@@ -172,12 +180,7 @@ const Availability = () => {
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Dynamic Availability & Capacity Controls</p>
                 </div>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <button
-                        onClick={() => setShowBulkModal(true)}
-                        className="flex-1 sm:flex-none bg-slate-100 text-secondary px-6 py-3.5 rounded-2xl font-black uppercase tracking-widest text-[9px] hover:bg-slate-200 transition-all flex items-center justify-center gap-2 border border-slate-200 group"
-                    >
-                        <Zap size={14} className="text-teal-500 group-hover:scale-125 transition-transform" /> Bulk Action
-                    </button>
+
                     <button
                         onClick={handleSaveMatrix}
                         disabled={Object.keys(pendingUpdates).length === 0}
@@ -193,19 +196,18 @@ const Availability = () => {
                 <div className="flex items-center gap-2 w-full md:w-auto">
                     <button onClick={() => navigateDate(-1)} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-slate-100 transition-all active:scale-90 text-slate-400 shadow-inner flex-shrink-0"><ChevronLeft size={18} /></button>
                     <div className="flex-grow md:flex-grow-0 flex items-center gap-3 border border-slate-200 rounded-2xl px-4 sm:px-6 py-2.5 shadow-sm bg-white hover:border-teal-300 transition-colors">
-                        <Calendar size={14} className="text-teal-400" />
-                        <input type="date" min={new Date().toISOString().split('T')[0]} className="bg-transparent text-[11px] sm:text-sm font-black outline-none text-secondary w-full" value={startDate} onChange={(e) => { setStartDate(e.target.value); fetchData(e.target.value); }} />
+                        <input type="date" min={new Date().toISOString().split('T')[0]} className="bg-transparent text-sm sm:text-base font-black outline-none text-secondary w-full" value={startDate} onChange={(e) => { setStartDate(e.target.value); fetchData(e.target.value); }} />
                     </div>
                     <button onClick={() => navigateDate(1)} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-slate-100 transition-all active:scale-90 text-slate-400 shadow-inner flex-shrink-0"><ChevronRight size={18} /></button>
                 </div>
                 <div className="relative w-full md:w-56">
-                    <select className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-3 text-[11px] font-black outline-none appearance-none text-slate-700 shadow-inner lowercase capitalize focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500/30 transition-all" value={selectedRT} onChange={(e) => { setSelectedRT(e.target.value); setTimeout(fetchData, 10); }}>
+                    <select className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-3 text-sm font-black outline-none appearance-none text-slate-700 shadow-inner lowercase capitalize focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500/30 transition-all" value={selectedRT} onChange={(e) => { setSelectedRT(e.target.value); setTimeout(fetchData, 10); }}>
                         <option value="all">Filter: All Categories</option>
                         {roomTypes.map(rt => <option key={rt._id} value={rt._id}>{rt.name}</option>)}
                     </select>
                     <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 </div>
-                <button onClick={() => fetchData()} className="w-full md:w-auto bg-secondary text-white px-10 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg hover:bg-slate-800">
+                <button onClick={() => fetchData()} className="w-full md:w-auto bg-secondary text-white px-10 py-3 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg hover:bg-slate-800">
                     <Search size={14} className={loading ? 'animate-spin' : ''} /> Run Query
                 </button>
             </div>
@@ -251,6 +253,7 @@ const Availability = () => {
                                                             Total:
                                                             <input
                                                                 type="number"
+                                                                min="0"
                                                                 className="w-8 sm:w-10 bg-transparent outline-none text-center font-black"
                                                                 value={row.totalRooms}
                                                                 onChange={(e) => updateTotalRooms(row._id, parseInt(e.target.value) || 0)}
@@ -286,6 +289,7 @@ const Availability = () => {
                                                 <td key={i} className={`px-2 sm:px-4 py-6 sm:py-8 border-r border-slate-100 transition-all ${isSun ? 'bg-rose-50/10' : ''}`}>
                                                     <input
                                                         type="number"
+                                                        min="0"
                                                         className={`w-full bg-white border-2 border-slate-100 rounded-2xl px-2 sm:px-3 py-3 sm:py-4 text-center text-xs sm:text-sm font-black text-secondary shadow-sm outline-none transition-all ${a.isStopSell ? 'border-rose-100 bg-rose-50/50 text-rose-500/50 pointer-events-none' : 'focus:border-teal-500 focus:ring-8 focus:ring-teal-500/5'}`}
                                                         value={a.roomsToSell}
                                                         onChange={(e) => updateCell(row._id, a.date, 'roomsToSell', parseInt(e.target.value) || 0)}
@@ -329,81 +333,7 @@ const Availability = () => {
                 </div>
             </div>
 
-            {/* Re-designed Bulk Action Modal */}
-            {
-                showBulkModal && (
-                    <div className="fixed inset-0 z-[400] flex items-center justify-center p-6 bg-secondary/80 backdrop-blur-xl animate-in fade-in duration-500">
-                        <div className="bg-white w-full max-w-xl rounded-[3.5rem] shadow-2xl overflow-hidden relative animate-in zoom-in-95 duration-300 text-left border-8 border-teal-500/10">
-                            <div className="px-12 py-10 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-2xl font-black text-secondary tracking-tighter leading-none mb-1 lowercase capitalize">Bulk <span className="text-teal-600 italic">Overrides</span></h3>
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Apply settings to multiple dates at once</p>
-                                </div>
-                                <button onClick={() => setShowBulkModal(false)} className="bg-white shadow-sm p-3 rounded-2xl text-slate-400 hover:text-rose-500 transition-all border border-slate-100"><X size={24} /></button>
-                            </div>
-                            <div className="px-12 py-10 space-y-8">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Selected Room Category</label>
-                                    <div className="relative">
-                                        <select className="w-full bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] px-6 py-5 text-sm font-black outline-none appearance-none cursor-pointer lowercase capitalize text-secondary focus:border-teal-500 transition-all" value={bulkForm.variantId} onChange={e => setBulkForm({ ...bulkForm, variantId: e.target.value })}>
-                                            <option value="">-- Click to choose category --</option>
-                                            {matrix.map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
-                                        </select>
-                                        <ChevronDown size={20} className="absolute right-6 top-1/2 -translate-y-1/2 text-teal-400 pointer-events-none" />
-                                    </div>
-                                </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Start Date</label>
-                                        <input type="date" className="w-full bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] px-6 py-4.5 text-xs font-black outline-none focus:border-teal-500 active:scale-[0.98] transition-all" value={bulkForm.fromDate} onChange={e => setBulkForm({ ...bulkForm, fromDate: e.target.value })} />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">End Date</label>
-                                        <input type="date" className="w-full bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] px-6 py-4.5 text-xs font-black outline-none focus:border-teal-500 active:scale-[0.98] transition-all" value={bulkForm.toDate} onChange={e => setBulkForm({ ...bulkForm, toDate: e.target.value })} />
-                                    </div>
-                                </div>
-
-                                {/* Day Selection Grid */}
-                                <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Active Weekdays</label>
-                                    <div className="grid grid-cols-7 gap-2">
-                                        {Object.keys(bulkForm.days).map(day => (
-                                            <button
-                                                key={day}
-                                                onClick={() => setBulkForm({ ...bulkForm, days: { ...bulkForm.days, [day]: !bulkForm.days[day] } })}
-                                                className={`py-3 rounded-xl text-[10px] font-black uppercase transition-all ${bulkForm.days[day] ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/20' : 'bg-slate-50 text-slate-300 border border-slate-100 hover:bg-slate-100'}`}
-                                            >
-                                                {day}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="p-8 bg-slate-50 rounded-[2.5rem] border-2 border-slate-100 space-y-6">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-teal-600 uppercase tracking-[0.3em] px-1">New Units Limit</label>
-                                        <input type="number" placeholder="Set Units Count..." className="w-full bg-white border-2 border-slate-100 rounded-[1.5rem] px-6 py-5 text-sm font-black outline-none shadow-inner focus:border-teal-400 transition-all" value={bulkForm.roomsToSell} onChange={e => setBulkForm({ ...bulkForm, roomsToSell: e.target.value })} />
-                                    </div>
-                                    <div className="flex items-center justify-between bg-white/50 p-4 rounded-2xl border border-slate-100">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-rose-50 text-rose-500 rounded-xl"><Ban size={18} /></div>
-                                            <span className="text-[11px] font-black text-secondary uppercase italic">Activate Stop Sell</span>
-                                        </div>
-                                        <button onClick={() => setBulkForm({ ...bulkForm, isStopSell: !bulkForm.isStopSell })} className={`w-12 h-7 rounded-full relative transition-all shadow-inner ${bulkForm.isStopSell ? 'bg-rose-500' : 'bg-slate-200'}`}>
-                                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-md ${bulkForm.isStopSell ? 'left-6' : 'left-1'}`} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <button onClick={handleBulkUpdate} className="w-full bg-secondary text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.3em] text-xs shadow-2xl hover:bg-slate-800 active:scale-95 transition-all outline-none border-b-4 border-b-teal-500">
-                                    Deploy Bulk Update
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
         </div >
     );
 };

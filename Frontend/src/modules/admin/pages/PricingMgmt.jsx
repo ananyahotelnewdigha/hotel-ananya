@@ -3,7 +3,7 @@ import api from '../../../services/api';
 import { Plus, Edit2, Trash2, X, Coffee, ChevronDown } from 'lucide-react';
 
 const EMPTY_FORM = {
-    roomVariant: '', ratePlan: '', planName: '', adult1Price: 0, adult2Price: 0, extraAdultPrice: 0, childPrice: 0, mealsIncluded: '', planImage: ''
+    roomVariant: '', ratePlan: '', planName: '', adult1Price: '', adult2Price: '', extraAdultPrice: '', childPrice: '', mealsIncluded: '', planImage: ''
 };
 
 const PricingMgmt = () => {
@@ -111,8 +111,19 @@ const PricingMgmt = () => {
 
         // Sanitize payload: remove empty strings for optional ObjectId or URL fields
         const payload = { ...formData };
+
+        // Price validation and parsing
+        payload.adult1Price = parseInt(payload.adult1Price) || 0;
+        payload.adult2Price = parseInt(payload.adult2Price) || 0;
+        payload.extraAdultPrice = parseInt(payload.extraAdultPrice) || 0;
+        payload.childPrice = parseInt(payload.childPrice) || 0;
+
         if (!payload.ratePlan) delete payload.ratePlan;
         if (!payload.planImage) delete payload.planImage;
+
+        if (payload.adult1Price < 0 || payload.adult2Price < 0 || payload.extraAdultPrice < 0 || payload.childPrice < 0) {
+            return alert('Price cannot be negative');
+        }
 
         try {
             if (editingPlan) {
@@ -315,36 +326,36 @@ const PricingMgmt = () => {
                                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">1 Guest</label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300">₹</span>
-                                        <input type="number" required
-                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all"
-                                            value={formData.adult1Price} onChange={e => setFormData(f => ({ ...f, adult1Price: parseFloat(e.target.value) || 0 }))} />
+                                        <input type="number" required min="0" placeholder="0"
+                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all shadow-inner"
+                                            value={formData.adult1Price} onChange={e => setFormData(f => ({ ...f, adult1Price: e.target.value }))} />
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">2 Guests</label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300">₹</span>
-                                        <input type="number" required
-                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all"
-                                            value={formData.adult2Price} onChange={e => setFormData(f => ({ ...f, adult2Price: parseFloat(e.target.value) || 0 }))} />
+                                        <input type="number" required min="0" placeholder="0"
+                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all shadow-inner"
+                                            value={formData.adult2Price} onChange={e => setFormData(f => ({ ...f, adult2Price: e.target.value }))} />
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Extra Adult</label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300">₹</span>
-                                        <input type="number" required
-                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all"
-                                            value={formData.extraAdultPrice} onChange={e => setFormData(f => ({ ...f, extraAdultPrice: parseFloat(e.target.value) || 0 }))} />
+                                        <input type="number" required min="0" placeholder="0"
+                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all shadow-inner"
+                                            value={formData.extraAdultPrice} onChange={e => setFormData(f => ({ ...f, extraAdultPrice: e.target.value }))} />
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Child</label>
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-300">₹</span>
-                                        <input type="number" required
-                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all"
-                                            value={formData.childPrice} onChange={e => setFormData(f => ({ ...f, childPrice: parseFloat(e.target.value) || 0 }))} />
+                                        <input type="number" required min="0" placeholder="0"
+                                            className="w-full bg-white border border-slate-100 rounded-xl pl-6 pr-3 py-2.5 text-[11px] font-black outline-none focus:border-emerald-500 transition-all shadow-inner"
+                                            value={formData.childPrice} onChange={e => setFormData(f => ({ ...f, childPrice: e.target.value }))} />
                                     </div>
                                 </div>
                             </div>
