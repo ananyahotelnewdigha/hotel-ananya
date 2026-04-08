@@ -21,7 +21,8 @@ const Gallery = () => {
         const fetchGallery = async () => {
             try {
                 const { data } = await api.get('/media/gallery');
-                setImages(data.length > 0 ? data : FALLBACK_IMAGES);
+                const activeOnly = data.filter(img => img.isActive !== false);
+                setImages(activeOnly.length > 0 ? activeOnly : FALLBACK_IMAGES);
             } catch (error) {
                 console.error('Gallery fetch error:', error);
                 setImages(FALLBACK_IMAGES);

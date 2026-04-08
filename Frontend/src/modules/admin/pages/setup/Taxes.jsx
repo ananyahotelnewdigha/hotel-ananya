@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../../../services/api';
-import { Plus, Trash2, Edit2, Percent, IndianRupee, ShieldCheck, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, ShieldCheck, X } from 'lucide-react';
 
 const Taxes = () => {
     const [taxes, setTaxes] = useState([]);
@@ -110,14 +110,15 @@ const Taxes = () => {
 
                         <div className="relative z-10">
                             <h3 className="text-lg lg:text-xl font-black text-secondary lowercase capitalize truncate">{tax.name}</h3>
-                            <p className="text-[9px] text-slate-300 font-bold uppercase tracking-widest mt-1 truncate block">ID: {tax._id?.slice(-8)}</p>
+                            <p className="text-[7px] text-slate-400 font-black uppercase tracking-[0.2em] mt-1 truncate block opacity-40">ID: {tax._id?.slice(-8)}</p>
 
                             <div className="mt-6 lg:mt-8 flex items-end justify-between">
                                 <div className="space-y-1 flex-1">
                                     <p className="text-[8px] lg:text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Applied Rate</p>
-                                    <div className="flex items-center gap-2">
-                                        {tax.type === 'Percentage' ? <Percent size={14} className="text-primary shrink-0" /> : <IndianRupee size={14} className="text-primary shrink-0" />}
-                                        <span className="text-2xl lg:text-3xl font-black text-secondary tabular-nums leading-none">{tax.rate}</span>
+                                    <div className="flex items-center">
+                                        <span className="text-2xl lg:text-3xl font-black text-secondary tabular-nums leading-none">
+                                            {tax.type === 'Percentage' ? `${tax.rate}%` : `₹${tax.rate}`}
+                                        </span>
                                     </div>
                                 </div>
                                 <div className={`px-4 py-1.5 text-[8px] lg:text-[9px] font-black uppercase tracking-widest rounded-full border shadow-sm transition-all whitespace-nowrap ${tax.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'

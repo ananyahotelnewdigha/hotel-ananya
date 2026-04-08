@@ -179,7 +179,7 @@ const VariantMgmt = () => {
                                 <div className="flex items-center justify-between pt-4 border-t border-slate-50">
                                     <div className="flex items-center gap-1.5 bg-slate-50/50 px-3 py-2 rounded-xl">
                                         <Layers size={12} className="text-primary" />
-                                        <p className="text-sm font-black text-secondary tabular-nums">{v.totalRooms}</p>
+                                        <p className="text-sm font-black text-secondary tabular-nums">{v.availableRooms ?? v.totalRooms}</p>
                                         <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Availability</p>
                                     </div>
                                     <span className={`text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border shadow-sm ${v.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>

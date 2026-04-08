@@ -157,7 +157,27 @@ router.get('/', async (req, res) => {
 // @desc    Update booking status
 router.put('/:id/status', async (req, res) => {
     try {
-        const booking = await Booking.findByIdAndUpdate(req.params.id, { bookingStatus: req.body.status }, { new: true });
+        const { status: newStatus } = req.body;
+        const currentBooking = await Booking.findById(req.params.id);
+
+        if (!currentBooking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        // Logic: once updated, not get to previous status
+        const currentStatus = currentBooking.bookingStatus;
+
+        // Terminal states cannot be changed
+        if (currentStatus === 'cancelled' || currentStatus === 'completed') {
+            return res.status(400).json({ message: `Cannot change status once it is ${currentStatus}` });
+        }
+
+        // Progression check: Cannot move back to pending
+        if (currentStatus !== 'pending' && newStatus === 'pending') {
+            return res.status(400).json({ message: 'Cannot revert status to pending' });
+        }
+
+        const booking = await Booking.findByIdAndUpdate(req.params.id, { bookingStatus: newStatus }, { new: true });
 
         if (booking) {
             // PUSH NOTIFICATION: User (Update Status)

@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     const [role, setRole] = useState('user');
     const [loading, setLoading] = useState(true);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [wishlist, setWishlist] = useState([]);
 
     const fetchUnreadCount = async (uid) => {
         const id = uid || user?._id;
@@ -34,9 +35,12 @@ export const AuthProvider = ({ children }) => {
                 api.get(`/auth/me/${parsed._id}`).then(res => {
                     const freshData = res.data;
                     if (freshData) {
-                        setUser(freshData);
+                        // CRITICAL: Preserve the existing token which isn't returned by /me/:id
+                        const updatedUser = { ...freshData, token: parsed.token };
+                        setUser(updatedUser);
                         setRole(freshData.role || 'user');
-                        localStorage.setItem('hotel_user', JSON.stringify(freshData));
+                        if (freshData.wishlist) setWishlist(freshData.wishlist);
+                        localStorage.setItem('hotel_user', JSON.stringify(updatedUser));
                     }
                 }).catch(e => console.error('Status sync failed:', e));
 
@@ -44,8 +48,35 @@ export const AuthProvider = ({ children }) => {
                 fetchUnreadCount(parsed._id);
             }
         }
+
+        // LOAD WISHLIST: Consistent dynamic wishlist state (Local backup + User sync)
+        if (savedUser) {
+            const parsed = JSON.parse(savedUser);
+            if (parsed.wishlist) setWishlist(parsed.wishlist);
+        } else {
+            const savedWishlist = localStorage.getItem('ananya_wishlist');
+            if (savedWishlist) {
+                try { setWishlist(JSON.parse(savedWishlist)); } catch (e) { console.error('Wishlist load failed'); }
+            }
+        }
+
         setLoading(false);
     }, []);
+
+    const toggleWishlist = (idx) => {
+        setWishlist(prev => {
+            const next = prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx];
+            localStorage.setItem('ananya_wishlist', JSON.stringify(next));
+
+            // CROSS-DEVICE SYNC: Update backend if user is logged in
+            if (user?._id) {
+                api.put(`/users/${user._id}`, { wishlist: next })
+                    .catch(err => console.error('Wishlist sync failed:', err));
+            }
+
+            return next;
+        });
+    };
 
     // Login logic updated for 2FA
     const login = async (email, password) => {
@@ -111,11 +142,12 @@ export const AuthProvider = ({ children }) => {
     const updateProfile = (newData) => {
         const updatedUser = { ...user, ...newData };
         setUser(updatedUser);
+        if (newData.wishlist) setWishlist(newData.wishlist);
         localStorage.setItem('hotel_user', JSON.stringify(updatedUser));
     };
 
     return (
-        <AuthContext.Provider value={{ user, role, login, signup, verifyOtp, logout, updateProfile, loading, unreadCount, fetchUnreadCount }}>
+        <AuthContext.Provider value={{ user, role, login, signup, verifyOtp, logout, updateProfile, loading, unreadCount, fetchUnreadCount, wishlist, toggleWishlist }}>
             {children}
         </AuthContext.Provider>
     );

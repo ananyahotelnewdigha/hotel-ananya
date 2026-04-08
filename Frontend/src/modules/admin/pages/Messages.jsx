@@ -51,6 +51,7 @@ const Messages = () => {
     const filteredMessages = messages.filter(msg => {
         const cleanSearchTerm = searchTerm.replace(/\s/g, '').toLowerCase();
         const matchesSearch =
+            `${msg.firstName || ''}${msg.lastName || ''}`.toLowerCase().replace(/\s/g, '').includes(cleanSearchTerm) ||
             (msg.firstName || '').toLowerCase().replace(/\s/g, '').includes(cleanSearchTerm) ||
             (msg.lastName || '').toLowerCase().replace(/\s/g, '').includes(cleanSearchTerm) ||
             (msg.email || '').toLowerCase().replace(/\s/g, '').includes(cleanSearchTerm) ||

@@ -23,7 +23,7 @@ router.post('/upload-single', upload.single('image'), async (req, res) => {
 router.get('/:type', async (req, res) => {
     try {
         const { type } = req.params;
-        const media = await Media.find({ type, isActive: true }).sort({ createdAt: -1 });
+        const media = await Media.find({ type }).sort({ createdAt: -1 });
         res.json(media);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching media' });

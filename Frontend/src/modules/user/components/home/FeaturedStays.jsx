@@ -7,16 +7,22 @@ import { useAuth } from '../../../../context/AuthContext';
 
 const FeaturedStays = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, wishlist, toggleWishlist } = useAuth();
     const isBlocked = user?.status === 'blocked';
-    const [likedRooms, setLikedRooms] = React.useState(new Set());
 
-    const toggleLike = (index) => {
-        setLikedRooms(prev => {
-            const next = new Set(prev);
-            if (next.has(index)) next.delete(index);
-            else next.add(index);
-            return next;
+    const handleToggleLike = (e, index) => {
+        e.stopPropagation();
+        if (!user) {
+            toast.error('Log in to save favorites');
+            return;
+        }
+
+        const isAdding = !wishlist.includes(index);
+        toggleWishlist(index);
+
+        toast.success(isAdding ? 'Added to your wishlist' : 'Removed from your wishlist', {
+            style: { background: '#1e293b', color: '#fff', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em' },
+            icon: isAdding ? '❤️' : '💔'
         });
     };
 
@@ -60,11 +66,19 @@ const FeaturedStays = () => {
                             {/* Action Cluster */}
                             <div className="absolute top-3 right-3 flex flex-col gap-2">
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); handleShare(room); }}
-                                    className="p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white hover:text-primary transition-all active:scale-90"
+                                    onClick={(e) => handleToggleLike(e, i)}
+                                    className={`p-2 backdrop-blur-md rounded-lg transition-all active:scale-90 shadow-lg ${wishlist.includes(i) ? 'bg-primary text-white' : 'bg-white/20 text-white hover:bg-white hover:text-primary'}`}
                                 >
-                                    <Share2 size={14} />
+                                    <Heart size={14} fill={wishlist.includes(i) ? "currentColor" : "none"} className={wishlist.includes(i) ? "animate-pulse" : ""} />
                                 </button>
+                                {navigator.share && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleShare(room); }}
+                                        className="p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white hover:text-primary transition-all active:scale-90 shadow-lg"
+                                    >
+                                        <Share2 size={14} />
+                                    </button>
+                                )}
                             </div>
                             <div className="absolute bottom-3 left-3 flex items-center space-x-1.5">
                                 <span className="bg-primary px-2 py-0.5 text-[7px] font-bold text-white uppercase tracking-widest rounded-md">Luxury</span>

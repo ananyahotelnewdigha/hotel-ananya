@@ -28,7 +28,8 @@ const HeroBanner = () => {
         const fetchBanners = async () => {
             try {
                 const { data } = await api.get('/media/banner');
-                setBanners(data.length > 0 ? data : FALLBACK_BANNERS);
+                const activeOnly = data.filter(banner => banner.isActive !== false);
+                setBanners(activeOnly.length > 0 ? activeOnly : FALLBACK_BANNERS);
             } catch (error) {
                 console.error('Banner fetch error:', error);
                 setBanners(FALLBACK_BANNERS);

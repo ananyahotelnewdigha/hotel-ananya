@@ -52,7 +52,7 @@ const RoomCard = ({ room, onBook, isBlocked }) => (
                 <Users size={12} className="text-primary" />
                 <span className="text-[9px] font-bold uppercase tracking-wider">{room.capacity} pax</span>
                 <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                <span className="text-[9px] font-bold uppercase tracking-wider">{room.totalRooms} keys available</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider">{room.availableRooms ?? room.totalRooms} keys available</span>
             </div>
 
             {/* Amenities */}

@@ -198,9 +198,9 @@ const Bookings = () => {
                                                                         'text-blue-600'
                                                             }`}
                                                     >
-                                                        <option value="pending">Pending</option>
-                                                        <option value="confirmed">Confirmed</option>
-                                                        <option value="cancelled">Cancelled</option>
+                                                        <option value="pending" disabled={bk.bookingStatus !== 'pending'}>Pending</option>
+                                                        <option value="confirmed" disabled={bk.bookingStatus === 'completed' || bk.bookingStatus === 'cancelled'}>Confirmed</option>
+                                                        <option value="cancelled" disabled={bk.bookingStatus === 'completed'}>Cancelled</option>
                                                         <option value="completed">Completed</option>
                                                     </select>
                                                     {bk.bookingStatus !== 'cancelled' && (

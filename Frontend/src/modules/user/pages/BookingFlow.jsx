@@ -65,6 +65,7 @@ const BookingFlow = () => {
     const [couponCode, setCouponCode] = useState('');
     const [discount, setDiscount] = useState(0);
     const [couponApplied, setCouponApplied] = useState(false);
+    const [publicCoupons, setPublicCoupons] = useState([]);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -80,6 +81,9 @@ const BookingFlow = () => {
                 payAtHotelEnabled: res.data.payAtHotelEnabled ?? true,
                 partialPaymentPercentage: res.data.partialPaymentPercentage ?? 25
             });
+        });
+        api.get('/discounts').then(res => {
+            if (res.data) setPublicCoupons(res.data.filter(c => c.active));
         });
     }, []);
 
@@ -199,6 +203,15 @@ const BookingFlow = () => {
                 style: { borderRadius: '16px', background: '#1e293b', color: '#fff', fontSize: '10px', fontWeight: 'bold' }
             });
         }
+    };
+
+    const handleRemoveCoupon = () => {
+        setDiscount(0);
+        setCouponApplied(false);
+        setCouponCode('');
+        toast.success("Voucher removed", {
+            style: { borderRadius: '16px', background: '#1e293b', color: '#fff', fontSize: '10px', fontWeight: 'bold' }
+        });
     };
 
     const handleCheckAvailability = async (variant) => {
@@ -717,25 +730,47 @@ const BookingFlow = () => {
 
                                 {/* Coupon Input */}
                                 <div className="mt-4 pt-4 border-t border-dashed border-slate-200">
-                                    <div className="relative flex gap-2">
-                                        <div className="relative flex-1">
-                                            <Ticket size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
-                                            <input
-                                                type="text"
-                                                placeholder="Enter Promotional Code"
-                                                value={couponCode}
-                                                disabled={couponApplied}
-                                                onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-sm pl-9 pr-4 py-2.5 text-[8px] font-bold uppercase tracking-widest outline-none focus:border-primary disabled:opacity-50"
-                                            />
+                                    <div className="flex flex-col gap-3">
+                                        {!couponApplied && publicCoupons.length > 0 && (
+                                            <div className="flex flex-col gap-2">
+                                                <p className="text-[8px] font-bold text-primary uppercase tracking-[0.2em]">Available Vouchers</p>
+                                                <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                                                    {publicCoupons.map(coupon => (
+                                                        <button
+                                                            key={coupon._id}
+                                                            onClick={() => setCouponCode(coupon.code)}
+                                                            className={`flex-shrink-0 px-3 py-2 rounded-sm border-2 border-dashed transition-all flex items-center gap-2 ${couponCode === coupon.code ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-400 hover:border-slate-300'}`}
+                                                        >
+                                                            <div className="text-[10px] font-black uppercase tracking-tight">{coupon.code}</div>
+                                                            <div className="text-[7px] font-bold uppercase py-0.5 px-1.5 bg-slate-100 rounded-sm">
+                                                                {coupon.type === 'Percentage' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="relative flex gap-2">
+                                            <div className="relative flex-1">
+                                                <Ticket size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Enter Promotional Code"
+                                                    value={couponCode}
+                                                    disabled={couponApplied}
+                                                    onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-sm pl-9 pr-4 py-2.5 text-[8px] font-bold uppercase tracking-widest outline-none focus:border-primary disabled:opacity-50"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={couponApplied ? handleRemoveCoupon : handleApplyCoupon}
+                                                disabled={!couponApplied && !couponCode}
+                                                className={`px-6 rounded-sm text-[8px] font-black uppercase tracking-widest shadow-lg shadow-primary/10 transition-all ${couponApplied ? 'bg-rose-500 text-white' : 'bg-primary text-secondary hover:brightness-110'}`}
+                                            >
+                                                {couponApplied ? 'Remove' : 'Apply'}
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={handleApplyCoupon}
-                                            disabled={couponApplied || !couponCode}
-                                            className={`px-6 rounded-sm text-[8px] font-black uppercase tracking-widest shadow-lg shadow-primary/10 transition-all ${couponApplied ? 'bg-emerald-500 text-white' : 'bg-primary text-secondary hover:brightness-110'}`}
-                                        >
-                                            {couponApplied ? <CheckCircle2 size={12} /> : 'Apply'}
-                                        </button>
                                     </div>
                                 </div>
 

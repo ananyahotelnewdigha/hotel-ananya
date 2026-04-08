@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import api from '../../../services/api';
 import { Search, Plus, Trash2, Edit2, Layers, X, Home, Info, Image as ImageIcon, ChevronRight, Upload } from 'lucide-react';
 import { getAmenityIcon, commonAmenityNames } from '../../../utils/amenityIcons';
+import { toast } from 'react-hot-toast';
 
 const RoomMgmt = () => {
     const [roomTypes, setRoomTypes] = useState([]);
@@ -52,10 +53,20 @@ const RoomMgmt = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Extract and clean sequences
+        const imageList = formData.images.split(',').map(s => s.trim()).filter(Boolean);
+        const amenityList = formData.amenities.split(',').map(s => s.trim()).filter(Boolean);
+
+        if (imageList.length === 0) {
+            toast.error('Hero visual asset is mandatory for integration.');
+            return;
+        }
+
         const payload = {
             ...formData,
-            amenities: formData.amenities.split(',').map(s => s.trim()),
-            images: formData.images.split(',').map(s => s.trim())
+            amenities: amenityList,
+            images: imageList
         };
 
         try {
@@ -68,8 +79,9 @@ const RoomMgmt = () => {
             setEditingType(null);
             setFormData({ name: '', size: '', capacity: '', bedType: '', totalRooms: 10, amenities: '', images: '' });
             fetchRoomTypes();
+            toast.success('Category successfully synchronized with registry.');
         } catch (error) {
-            alert('Operation failed');
+            toast.error('Integration failure detected.');
         }
     };
 
@@ -134,7 +146,7 @@ const RoomMgmt = () => {
                                 </div>
                                 <div className="mt-3 lg:mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <div className="text-[7px] lg:text-[9px] font-black uppercase text-slate-400 tracking-widest bg-slate-50 px-2 lg:px-3 py-1 lg:py-1.5 rounded lg:rounded-lg flex items-center gap-2">
-                                        <Layers size={10} className="text-primary shrink-0" /> {type.totalRooms} Units available
+                                        <Layers size={10} className="text-primary shrink-0" /> {type.availableRooms ?? type.totalRooms} Units available
                                     </div>
                                     <div className="text-[7px] lg:text-[9px] font-black uppercase text-slate-400 tracking-widest bg-slate-50 px-2 lg:px-3 py-1 lg:py-1.5 rounded lg:rounded-lg flex items-center gap-2">
                                         <Home size={10} className="text-primary shrink-0" /> {type.size}
@@ -219,7 +231,9 @@ const RoomMgmt = () => {
                                 </div>
                             </div>
                             <div className="md:col-span-2 space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Hero Asset Management</label>
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+                                    Hero Asset Management <span className="text-rose-500">*</span>
+                                </label>
                                 <div className="flex flex-wrap gap-4">
                                     <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                                     <button

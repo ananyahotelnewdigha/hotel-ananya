@@ -19,6 +19,9 @@ const ServiceMgmt = () => {
         isActive: true
     });
 
+    const [uploading, setUploading] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState('');
+
     const fetchServices = async () => {
         try {
             setLoading(true);
@@ -37,6 +40,10 @@ const ServiceMgmt = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (parseFloat(formData.price) < 0) {
+            alert('Starting price cannot be negative');
+            return;
+        }
         try {
             if (editingItem) {
                 await api.put(`/services/${editingItem._id}`, formData);
@@ -48,7 +55,29 @@ const ServiceMgmt = () => {
             resetForm();
             fetchServices();
         } catch (error) {
+            console.error(error);
             alert('Operation failed');
+        }
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        setPreviewUrl(URL.createObjectURL(file));
+
+        const data = new FormData();
+        data.append('image', file);
+
+        try {
+            const res = await api.post('/media/upload-single', data);
+            setFormData(prev => ({ ...prev, image: res.data.imageUrl }));
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Image upload failed');
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -72,6 +101,7 @@ const ServiceMgmt = () => {
             image: '',
             isActive: true
         });
+        setPreviewUrl('');
     };
 
     const filteredServices = services.filter(s => s.type === activeTab);
@@ -206,7 +236,17 @@ const ServiceMgmt = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Starting Price (₹)</label>
-                                    <input type="number" placeholder="0" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-xs font-bold outline-none" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-xs font-bold outline-none"
+                                        value={formData.price}
+                                        onChange={e => {
+                                            const val = parseFloat(e.target.value);
+                                            setFormData({ ...formData, price: val < 0 ? 0 : e.target.value });
+                                        }}
+                                    />
                                 </div>
                             </div>
 
@@ -216,8 +256,39 @@ const ServiceMgmt = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Image URL</label>
-                                <input placeholder="https://..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-xs font-bold outline-none" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} />
+                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Service Asset Image</label>
+                                <div className={`relative h-40 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 overflow-hidden transition-all
+                                    ${formData.image || previewUrl ? 'border-primary/50 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'}`}>
+
+                                    {(formData.image || previewUrl) ? (
+                                        <>
+                                            <img src={formData.image || previewUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                                <p className="text-[8px] font-black text-white uppercase tracking-widest">Click to change</p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ImageIcon className="text-slate-300" size={24} />
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Select Image Asset</p>
+                                        </>
+                                    )}
+
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                        disabled={uploading}
+                                    />
+
+                                    {uploading && (
+                                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    )}
+                                </div>
+                                {formData.image && <p className="text-[8px] text-slate-400 truncate mt-1">Stored: {formData.image}</p>}
                             </div>
 
                             <div className="pt-4">

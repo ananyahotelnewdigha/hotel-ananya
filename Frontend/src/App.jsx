@@ -94,31 +94,27 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/terms" element={<Terms />} />
 
-            {/* Protected User Module */}
-            <Route
-              path="/"
-              element={
-                <UserRoute>
-                  <UserLayout />
-                </UserRoute>
-              }
-            >
+            {/* User Module - Combined Public and Protected */}
+            <Route element={<UserLayout />}>
               <Route index element={<Home />} />
               <Route path="rooms" element={<Rooms />} />
-              <Route path="wallet" element={<Wallet />} />
-              <Route path="wallet/history" element={<TransactionHistory />} />
               <Route path="about" element={<About />} />
               <Route path="gallery" element={<Gallery />} />
               <Route path="contact" element={<Contact />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="profile/bookings" element={<MyBookings />} />
-              <Route path="profile/details" element={<AccountDetails />} />
-              <Route path="book" element={<BookingFlow />} />
               <Route path="stay" element={<Stay />} />
               <Route path="dine" element={<Dine />} />
               <Route path="dip" element={<Dip />} />
               <Route path="care" element={<Care />} />
-              <Route path="notifications" element={<Notifications />} />
+
+              {/* Protected User Routes */}
+              <Route path="wallet" element={<UserRoute><Wallet /></UserRoute>} />
+              <Route path="wallet/history" element={<UserRoute><TransactionHistory /></UserRoute>} />
+              <Route path="profile" element={<UserRoute><Profile /></UserRoute>} />
+              <Route path="profile/wishlist" element={<UserRoute><Profile /></UserRoute>} />
+              <Route path="profile/bookings" element={<UserRoute><MyBookings /></UserRoute>} />
+              <Route path="profile/details" element={<UserRoute><AccountDetails /></UserRoute>} />
+              <Route path="book" element={<UserRoute><BookingFlow /></UserRoute>} />
+              <Route path="notifications" element={<UserRoute><Notifications /></UserRoute>} />
             </Route>
 
             {/* Admin Module */}

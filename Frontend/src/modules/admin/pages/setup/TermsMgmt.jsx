@@ -123,9 +123,14 @@ const TermsMgmt = () => {
                                 className="w-full bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white text-xs lg:text-sm px-4 py-3 rounded-xl outline-none transition-all font-bold text-secondary"
                             />
                         </div>
-                        <div className="shrink-0 p-4 bg-primary/10 rounded-2xl border border-primary/20">
-                            <Scale size={20} className="text-primary" />
-                        </div>
+                        <button
+                            type="button"
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="shrink-0 p-4 bg-primary/10 rounded-2xl border border-primary/20 hover:bg-primary transition-all active:scale-90 group/scale disabled:opacity-50"
+                        >
+                            <Scale size={20} className="text-primary group-hover/scale:text-secondary transition-colors" />
+                        </button>
                     </div>
                 </div>
 

@@ -17,8 +17,13 @@ export const requestPermissionAndGetToken = async (userId) => {
             // Robust Service Worker Registration
             let registration;
             if ('serviceWorker' in navigator) {
-                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                console.log('Service Worker registered for FCM:', registration);
+                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                    scope: '/'
+                });
+
+                // CRUCIAL: Wait for the service worker to be active before getting token
+                await navigator.serviceWorker.ready;
+                console.log('Service Worker registered and ready:', registration);
             }
 
             const token = await getToken(messaging, {

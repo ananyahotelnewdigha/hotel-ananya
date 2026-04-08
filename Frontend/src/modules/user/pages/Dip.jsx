@@ -31,7 +31,7 @@ const Dip = () => {
         <div className="bg-white min-h-screen pb-24 text-left">
             <header className="relative h-[40vh] overflow-hidden">
                 <img
-                    src="https://images.unsplash.com/photo-1540333063872-a429072dea61?auto=format&fit=crop&w=1600&q=80"
+                    src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1600&q=80"
                     className="w-full h-full object-cover"
                     alt="Dip"
                 />

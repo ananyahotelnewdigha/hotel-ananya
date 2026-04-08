@@ -26,13 +26,17 @@ export const sendNotificationToUser = async (userId, title, body, data = {}) => 
 
         if (uniqueTokens.length === 0) return;
 
+        // Ensure all data values are strings (FCM requirement)
+        const stringifiedData = {};
+        Object.keys(data).forEach(key => {
+            stringifiedData[key] = String(data[key]);
+        });
+        stringifiedData.click_action = 'FLUTTER_NOTIFICATION_CLICK';
+        stringifiedData.link = String(data.link || '/');
+
         const message = {
             notification: { title, body },
-            data: {
-                ...data,
-                click_action: 'FLUTTER_NOTIFICATION_CLICK', // Required for older Flutter SDKs
-                link: data.link || '/' // Used by our new Web Service Worker
-            }
+            data: stringifiedData
         };
 
         const response = await admin.messaging().sendEachForMulticast({

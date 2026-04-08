@@ -16,19 +16,45 @@ const normalizeDate = (d) => {
 // @route   GET /api/rooms
 router.get('/', async (req, res) => {
     try {
+        const { date } = req.query;
+        const targetDate = date ? new Date(date) : new Date();
+        targetDate.setUTCHours(0, 0, 0, 0);
+
         const roomTypes = await RoomType.find({ isActive: true });
 
         const enriched = await Promise.all(roomTypes.map(async (type) => {
-            const variant = await RoomVariant.findOne({ roomType: type._id });
-            const minPlan = variant ? await Pricing.findOne({ roomVariant: variant._id }).sort({ adult2Price: 1 }) : null;
+            const variants = await RoomVariant.find({ roomType: type._id });
+
+            // Calculate starting price and availability
+            let minPrice = Infinity;
+            let totalAvailable = 0;
+
+            for (const v of variants) {
+                // Price check
+                const minPlan = await Pricing.findOne({ roomVariant: v._id }).sort({ adult2Price: 1 });
+                if (minPlan && minPlan.adult2Price < minPrice) {
+                    minPrice = minPlan.adult2Price;
+                }
+
+                // Availability check
+                const inv = await Inventory.findOne({ roomVariant: v._id, date: targetDate });
+                if (inv?.isStopSell) continue;
+
+                const limit = inv?.roomsToSell ?? v.totalRooms;
+                const booked = inv?.bookedUnits ?? 0;
+                totalAvailable += Math.max(0, limit - booked);
+            }
+
             return {
                 ...type.toObject(),
-                startingPrice: minPlan ? minPlan.adult2Price : 0
+                startingPrice: minPrice === Infinity ? 0 : minPrice,
+                availableRooms: totalAvailable
             };
         }));
 
         res.json(enriched);
     } catch (error) {
+        console.error('Error fetching room types:', error);
         res.status(500).json({ message: 'Error fetching room types' });
     }
 });
