@@ -127,21 +127,24 @@ const Rooms = () => {
         }
     }, [location.state]);
 
+    const getRoomCategory = (name) => {
+        const n = name.toLowerCase();
+        if (n.includes('suite')) return 'Suite';
+        if (n.includes('deluxe')) return 'Deluxe';
+        if (n.includes('premium')) return 'Premium';
+        if (n.includes('executive')) return 'Executive';
+        return 'Standard';
+    };
+
     const filtered = categories.filter(r => {
         const searchTerm = search.replace(/\s/g, '').toLowerCase();
         const roomName = r.name.replace(/\s/g, '').toLowerCase();
         const matchesSearch = roomName.includes(searchTerm);
-        const matchesCategory = categoryFilter === 'All' || r.name.toLowerCase().includes(categoryFilter.toLowerCase());
+        const matchesCategory = categoryFilter === 'All' || getRoomCategory(r.name) === categoryFilter;
         return matchesSearch && matchesCategory;
     });
 
-    const uniqueCategories = ['All', ...new Set(categories.map(r => {
-        if (r.name.toLowerCase().includes('suite')) return 'Suite';
-        if (r.name.toLowerCase().includes('deluxe')) return 'Deluxe';
-        if (r.name.toLowerCase().includes('premium')) return 'Premium';
-        if (r.name.toLowerCase().includes('executive')) return 'Executive';
-        return 'Standard';
-    }))].filter((v, i, a) => a.indexOf(v) === i);
+    const uniqueCategories = ['All', ...new Set(categories.map(r => getRoomCategory(r.name)))];
 
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">

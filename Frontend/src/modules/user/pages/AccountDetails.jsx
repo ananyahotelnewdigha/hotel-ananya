@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Camera, ChevronLeft, Shield, CheckCircle2, Save, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
@@ -66,9 +66,34 @@ const AccountDetails = () => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    // Flutter Bridge for Native Camera/Gallery Integration
+    useEffect(() => {
+        window.setProfileImage = async (imageUrl) => {
+            if (!imageUrl) return;
+            setUploading(true);
+            try {
+                const updatedUserRes = await api.put(`/users/${user._id}`, { profilePicture: imageUrl });
+                updateProfile(updatedUserRes.data);
+                toast.success('Visual identity synchronized!');
+            } catch (error) {
+                console.error('Flutter bridge error:', error);
+                toast.error('Identity sync failed');
+            } finally {
+                setUploading(false);
+            }
+        };
+        return () => { delete window.setProfileImage; };
+    }, [user._id, updateProfile]);
+
     const handleCameraClick = () => {
         if (!isEditing) return;
-        fileInputRef.current.click();
+
+        // Bridge for Flutter WebView
+        if (window.FlutterImagePicker) {
+            window.FlutterImagePicker.postMessage('pickImage');
+        } else {
+            fileInputRef.current.click();
+        }
     };
 
     const handleFileChange = async (e) => {
