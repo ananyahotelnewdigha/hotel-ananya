@@ -2,58 +2,114 @@ import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Bed, Ticket, Users, Wallet, LogOut,
-    Settings, ShieldCheck, Tag, Zap, Percent, Building2, HardDrive, Image, Layers, Menu, X as CloseIcon, MessageSquare, Scale, Copy
+    Settings, ShieldCheck, Tag, Zap, Percent, Building2, HardDrive, Image, Layers, Menu, X as CloseIcon, MessageSquare, Scale, Copy, Lock, Key
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const AdminLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, role, isSuperAdmin, logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [lockedSections, setLockedSections] = useState([]);
+    const [masterPasscode, setMasterPasscode] = useState('123456');
+    const [isPassModalOpen, setIsPassModalOpen] = useState(false);
+    const [passInput, setPassInput] = useState('');
+    const [targetLink, setTargetLink] = useState(null);
 
-    // Close sidebar on route change (for mobile)
     useEffect(() => {
-        setIsSidebarOpen(false);
-    }, [location]);
+        api.get('/setup/property').then(res => {
+            const locks = res.data.lockedSections || [];
+            setLockedSections(locks);
+            setMasterPasscode(res.data.masterPasscode || '123456');
 
-    const sections = [
+            if (role === 'admin') {
+                const allLinks = allSections.flatMap(s => s.links);
+                const currentSection = allLinks.find(l => l.path === location.pathname);
+                if (currentSection && locks.includes(currentSection.id)) {
+                    navigate('/admin');
+                }
+            }
+        }).catch(err => console.error(err));
+    }, [location.pathname, role]);
+
+    const allSections = [
+        {
+            title: 'Governance',
+            role: ['admin', 'superadmin'],
+            links: [
+                { id: 'control', name: 'Admin Control', path: '/admin/control', icon: ShieldCheck },
+            ]
+        },
         {
             title: 'Operations',
             links: [
-                { name: 'Insights', path: '/admin', icon: LayoutDashboard },
-                { name: 'Bookings', path: '/admin/bookings', icon: Ticket },
-                { name: 'Guest Ledger', path: '/admin/users', icon: Users },
-                { name: 'Financials', path: '/admin/wallet', icon: Wallet },
+                { id: 'insights', name: 'Insights', path: '/admin', icon: LayoutDashboard },
+                { id: 'bookings', name: 'Bookings', path: '/admin/bookings', icon: Ticket },
+                { id: 'users', name: 'Guest Ledger', path: '/admin/users', icon: Users },
+                { id: 'wallet', name: 'Financials', path: '/admin/wallet', icon: Wallet },
             ]
         },
         {
             title: 'Inventory',
             links: [
-                { name: 'Room Types', path: '/admin/rooms', icon: Bed },
-                { name: 'Room Variants', path: '/admin/rooms/variants', icon: Layers },
-                { name: 'Availability', path: '/admin/inventory/availability', icon: HardDrive },
-                { name: 'Bulk Update', path: '/admin/inventory/bulk-update', icon: Copy },
-                { name: 'Yield Rates', path: '/admin/inventory/rates', icon: Zap },
-                { name: 'Yield Management', path: '/admin/setup/pricing', icon: Tag },
+                { id: 'rooms', name: 'Room Types', path: '/admin/rooms', icon: Bed },
+                { id: 'variants', name: 'Room Variants', path: '/admin/rooms/variants', icon: Layers },
+                { id: 'availability', name: 'Availability', path: '/admin/inventory/availability', icon: HardDrive },
+                { id: 'bulk_update', name: 'Bulk Update', path: '/admin/inventory/bulk-update', icon: Copy },
+                { id: 'rates', name: 'Yield Rates', path: '/admin/inventory/rates', icon: Zap },
+                { id: 'pricing', name: 'Yield Management', path: '/admin/setup/pricing', icon: Tag },
             ]
         },
         {
             title: 'Configuration',
             links: [
-                { name: 'Promotions', path: '/admin/discounts', icon: Tag },
-                { name: 'Tax Registry', path: '/admin/setup/taxes', icon: Percent },
-                { name: 'Service Charges', path: '/admin/setup/charges', icon: ShieldCheck },
-                { name: 'Rate Plans', path: '/admin/setup/rate-plans', icon: Zap },
-                { name: 'Guest Feedback', path: '/admin/messages', icon: MessageSquare },
-                { name: 'Legal Protocols', path: '/admin/setup/terms', icon: Scale },
-                { name: 'Media Assets', path: '/admin/media', icon: Image },
-                { name: 'Payment Setups', path: '/admin/setup/payments', icon: Wallet },
-                { name: 'Property Info', path: '/admin/setup/property', icon: Building2 },
-                { name: 'Other Services', path: '/admin/services', icon: Building2 },
+                { id: 'discounts', name: 'Promotions', path: '/admin/discounts', icon: Tag },
+                { id: 'taxes', name: 'Tax Registry', path: '/admin/setup/taxes', icon: Percent },
+                { id: 'charges', name: 'Service Charges', path: '/admin/setup/charges', icon: ShieldCheck },
+                { id: 'rate_plans', name: 'Rate Plans', path: '/admin/setup/rate-plans', icon: Zap },
+                { id: 'messages', name: 'Guest Feedback', path: '/admin/messages', icon: MessageSquare },
+                { id: 'terms', name: 'Legal Protocols', path: '/admin/setup/terms', icon: Scale },
+                { id: 'media', name: 'Media Assets', path: '/admin/media', icon: Image },
+                { id: 'payments', name: 'Payment Setups', path: '/admin/setup/payments', icon: Wallet },
+                { id: 'property', name: 'Property Info', path: '/admin/setup/property', icon: Building2 },
+                { id: 'services', name: 'Other Services', path: '/admin/services', icon: Building2 },
             ]
         }
     ];
+
+    const handleLinkClick = (e, link) => {
+        if (link.id === 'control' && role === 'admin') {
+            if (sessionStorage.getItem('is_admin_unlocked') === 'true') return;
+            e.preventDefault();
+            setTargetLink(link);
+            setIsPassModalOpen(true);
+        }
+    };
+
+    const verifyPasscode = () => {
+        if (passInput === masterPasscode) {
+            sessionStorage.setItem('is_admin_unlocked', 'true');
+            if (targetLink) navigate(targetLink.path);
+            setIsPassModalOpen(false);
+            setPassInput('');
+        } else {
+            alert("Security Breach Detected: Invalid Credentials");
+            setPassInput('');
+        }
+    };
+
+    const filteredSections = allSections
+        .filter(section => !section.role || section.role.includes(role))
+        .map(section => ({
+            ...section,
+            links: section.links.filter(link => {
+                if (isSuperAdmin) return true;
+                return !lockedSections.includes(link.id);
+            })
+        }))
+        .filter(section => section.links.length > 0);
 
     return (
         <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
@@ -82,24 +138,27 @@ const AdminLayout = () => {
                 </div>
 
                 <nav className="flex-grow overflow-y-auto custom-scrollbar p-6 space-y-8 mt-2">
-                    {sections.map((section) => (
+                    {filteredSections.map((section) => (
                         <div key={section.title} className="space-y-3">
                             <h3 className="px-4 text-[10px] uppercase font-black tracking-[0.2em] text-white/30">{section.title}</h3>
                             <div className="space-y-1">
                                 {section.links.map((link) => {
                                     const Icon = link.icon;
                                     const isActive = location.pathname === link.path;
+                                    const isLocked = lockedSections.includes(link.id);
                                     return (
                                         <Link
                                             key={link.name}
                                             to={link.path}
+                                            onClick={(e) => handleLinkClick(e, link)}
                                             className={`flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
-                                                ? 'bg-primary text-secondary shadow-lg shadow-primary/20 scale-[1.02]'
+                                                ? 'bg-primary text-secondary shadow-lg shadow-primary/20'
                                                 : 'text-white/60 hover:text-white hover:bg-white/5'
                                                 }`}
                                         >
                                             <Icon size={18} className={`${isActive ? 'text-secondary' : 'text-primary/60 group-hover:text-primary'} transition-colors`} />
-                                            <span className="text-sm font-bold tracking-tight">{link.name}</span>
+                                            <span className="text-sm font-bold tracking-tight whitespace-nowrap">{link.name}</span>
+                                            {isLocked && isSuperAdmin && <Lock size={12} className="text-rose-500 animate-pulse ml-auto" />}
                                         </Link>
                                     );
                                 })}
@@ -173,6 +232,53 @@ const AdminLayout = () => {
                     <Outlet />
                 </div>
             </main>
+
+            {/* Custom Security Modal */}
+            {isPassModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                    <div className="absolute inset-0 bg-secondary/80 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsPassModalOpen(false)} />
+                    <div className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 border border-slate-100">
+                        <div className="p-10 text-center">
+                            <div className="w-20 h-20 bg-primary/10 text-primary rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-primary/5">
+                                <Key size={32} />
+                            </div>
+                            <h3 className="text-2xl font-black text-secondary lowercase capitalize tracking-tighter mb-2">Master <span className="text-primary italic">Protocol</span></h3>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-10">Verification Required for Governance Node</p>
+
+                            <div className="space-y-4">
+                                <input
+                                    type="password"
+                                    autoFocus
+                                    placeholder="••••••"
+                                    value={passInput}
+                                    onChange={(e) => setPassInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && verifyPasscode()}
+                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-center text-2xl font-black tracking-[0.5em] text-secondary focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all outline-none placeholder:text-slate-200"
+                                />
+                                <div className="grid grid-cols-2 gap-3 pt-4">
+                                    <button
+                                        onClick={() => setIsPassModalOpen(false)}
+                                        className="py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={verifyPasscode}
+                                        className="bg-primary text-secondary py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:brightness-105 transition-all shadow-xl shadow-primary/20"
+                                    >
+                                        Establish Access
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-slate-50 p-4 border-t border-slate-100">
+                            <p className="flex items-center justify-center gap-2 text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                                <ShieldCheck size={10} className="text-primary" /> End-to-End Encryption Active
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

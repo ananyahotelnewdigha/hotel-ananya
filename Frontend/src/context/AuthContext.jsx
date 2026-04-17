@@ -137,6 +137,7 @@ export const AuthProvider = ({ children }) => {
         setRole('user');
         localStorage.removeItem('hotel_user');
         localStorage.removeItem('fcmToken'); // Clear token on logout
+        sessionStorage.removeItem('is_admin_unlocked'); // SECURITY: Clear governance lock on logout
     };
 
     const updateProfile = (newData) => {
@@ -146,8 +147,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('hotel_user', JSON.stringify(updatedUser));
     };
 
+    const isSuperAdmin = role === 'superadmin';
     return (
-        <AuthContext.Provider value={{ user, role, login, signup, verifyOtp, logout, updateProfile, loading, unreadCount, fetchUnreadCount, wishlist, toggleWishlist }}>
+        <AuthContext.Provider value={{
+            user, role, isSuperAdmin, login, signup, verifyOtp, logout, updateProfile,
+            loading, unreadCount, fetchUnreadCount, wishlist, toggleWishlist
+        }}>
             {children}
         </AuthContext.Provider>
     );

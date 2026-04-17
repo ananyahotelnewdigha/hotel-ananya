@@ -70,6 +70,21 @@ const Dine = () => {
                                 <div className="px-4">
                                     <h3 className="text-xl font-black text-secondary uppercase tracking-tight">{item.name}</h3>
                                     <p className="text-sm text-slate-500 mt-2 font-medium leading-relaxed italic line-clamp-2">{item.description}</p>
+
+                                    {/* Integrated Menu/Items List */}
+                                    {item.items && item.items.length > 0 && (
+                                        <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
+                                            {item.items.map((sub, i) => (
+                                                <div key={i} className="flex justify-between items-center group/item">
+                                                    <div className="text-left">
+                                                        <p className="text-xs font-black text-secondary uppercase tracking-tighter">{sub.name}</p>
+                                                        {sub.description && <p className="text-[10px] text-slate-400 italic">{sub.description}</p>}
+                                                    </div>
+                                                    <span className="text-xs font-black text-primary group-hover/item:scale-110 transition-transform">₹{sub.price}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

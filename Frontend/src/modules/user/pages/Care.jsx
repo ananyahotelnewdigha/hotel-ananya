@@ -29,23 +29,20 @@ const Care = () => {
 
     return (
         <div className="bg-[#FAF9F6] min-h-screen pb-24 text-left">
-            <header className="px-8 pt-20 pb-16 text-center space-y-4">
-                <Heart className="mx-auto text-rose-400 animate-pulse" size={32} />
-                <h1 className="text-5xl font-black text-secondary lowercase capitalize leading-tight">Sacred <span className="text-primary italic">Healings</span></h1>
-                <p className="max-w-xl mx-auto text-sm text-slate-500 font-medium italic opacity-80 mt-4 leading-relaxed">
+            <header className="px-8 pt-12 pb-8 text-center space-y-3">
+                <Heart className="mx-auto text-rose-400 animate-pulse" size={24} />
+                <h1 className="text-4xl font-black text-secondary lowercase capitalize leading-tight">Sacred <span className="text-primary italic">Healings</span></h1>
+                <p className="max-w-md mx-auto text-[11px] text-slate-500 font-medium italic opacity-80 mt-2 leading-relaxed">
                     A collection of ancient wellness rituals and modern therapies designed to restore your inner equilibrium.
                 </p>
-                <div className="flex justify-center gap-4 mt-8">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm text-[8px] font-black uppercase tracking-widest text-slate-400">
-                        <ShieldCheck size={12} className="text-emerald-400" /> Ayurvedic Certified
-                    </div>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm text-[8px] font-black uppercase tracking-widest text-slate-400">
-                        <ShieldCheck size={12} className="text-emerald-400" /> Organic Essences
+                <div className="flex justify-center gap-3 mt-6">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full shadow-sm text-[7px] font-black uppercase tracking-widest text-slate-400">
+                        <ShieldCheck size={10} className="text-emerald-400" /> Ayurvedic Certified
                     </div>
                 </div>
             </header>
 
-            <div className="px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.length === 0 ? (
                     <div className="col-span-full text-center py-20">
                         <Heart size={40} className="mx-auto text-slate-200 mb-4" />
@@ -53,10 +50,10 @@ const Care = () => {
                     </div>
                 ) : (
                     items.map((item) => (
-                        <div key={item._id} className="bg-white rounded-[3rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 group">
-                            <div className="w-20 h-20 bg-primary/5 rounded-[2rem] flex items-center justify-center mb-8 group-hover:bg-primary transition-all duration-500">
+                        <div key={item._id} className="bg-white rounded-[2.5rem] p-6 lg:p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 group">
+                            <div className="w-16 h-16 bg-primary/5 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:bg-primary transition-all duration-500">
                                 {item.image ? (
-                                    <img src={item.image} className="w-12 h-12 rounded-2xl object-cover" alt={item.name} />
+                                    <img src={item.image} className="w-10 h-10 rounded-xl object-cover" alt={item.name} />
                                 ) : (
                                     <Heart className="text-primary group-hover:text-secondary transition-colors" size={28} />
                                 )}
@@ -64,10 +61,22 @@ const Care = () => {
                             <span className="text-[9px] font-black uppercase text-primary tracking-[0.2em]">{item.category}</span>
                             <h3 className="text-2xl font-black text-secondary mt-2 lowercase capitalize">{item.name}</h3>
                             <p className="text-xs text-slate-500 mt-4 font-medium leading-relaxed italic">{item.description}</p>
-                            <div className="mt-8 pt-8 border-t border-slate-50 flex justify-between items-center">
-                                <span className="text-lg font-black text-secondary lowercase">₹{item.price} <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">/ Session</span></span>
-                                <button className="p-4 bg-slate-50 text-slate-400 rounded-2xl hover:bg-secondary hover:text-white transition-all">
-                                    <Plus size={20} />
+
+                            {/* Integrated Therapy/Items List */}
+                            {item.items && item.items.length > 0 && (
+                                <div className="mt-6 space-y-3">
+                                    {item.items.map((sub, i) => (
+                                        <div key={i} className="flex justify-between items-center bg-slate-50/50 p-3 rounded-2xl">
+                                            <p className="text-[10px] font-black text-secondary uppercase tracking-tighter">{sub.name}</p>
+                                            <span className="text-[10px] font-black text-primary">₹{sub.price}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="mt-6 pt-6 border-t border-slate-50 flex justify-between items-center">
+                                <span className="text-base font-black text-secondary lowercase">₹{item.price} <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest ml-1">/ Session</span></span>
+                                <button className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-secondary hover:text-white transition-all">
+                                    <Plus size={18} />
                                 </button>
                             </div>
                         </div>

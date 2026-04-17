@@ -16,8 +16,29 @@ const ServiceMgmt = () => {
         description: '',
         price: 0,
         image: '',
-        isActive: true
+        isActive: true,
+        items: []
     });
+
+    const addSubItem = () => {
+        setFormData(prev => ({
+            ...prev,
+            items: [...prev.items, { name: '', price: 0, description: '' }]
+        }));
+    };
+
+    const updateSubItem = (index, field, value) => {
+        const newItems = [...formData.items];
+        newItems[index] = { ...newItems[index], [field]: value };
+        setFormData(prev => ({ ...prev, items: newItems }));
+    };
+
+    const removeSubItem = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            items: prev.items.filter((_, i) => i !== index)
+        }));
+    };
 
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState('');
@@ -289,6 +310,59 @@ const ServiceMgmt = () => {
                                     )}
                                 </div>
                                 {formData.image && <p className="text-[8px] text-slate-400 truncate mt-1">Stored: {formData.image}</p>}
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center px-1">
+                                    <label className="text-[10px] font-black text-secondary uppercase tracking-widest">Inventory List / Menu Items</label>
+                                    <button
+                                        type="button"
+                                        onClick={addSubItem}
+                                        className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:brightness-110"
+                                    >
+                                        <Plus size={10} /> Add Item
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    {formData.items.length === 0 ? (
+                                        <div className="py-6 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest italic">No sub-items registered yet.</p>
+                                        </div>
+                                    ) : (
+                                        formData.items.map((item, idx) => (
+                                            <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-3 relative animate-in fade-in slide-in-from-right-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeSubItem(idx)}
+                                                    className="absolute top-2 right-2 p-1.5 text-rose-300 hover:text-rose-500 transition-colors"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <input
+                                                        placeholder="Item Name"
+                                                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold outline-none"
+                                                        value={item.name || ''}
+                                                        onChange={e => updateSubItem(idx, 'name', e.target.value)}
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Price"
+                                                        className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold outline-none"
+                                                        value={item.price || 0}
+                                                        onChange={e => updateSubItem(idx, 'price', e.target.value)}
+                                                    />
+                                                </div>
+                                                <input
+                                                    placeholder="Brief description..."
+                                                    className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold outline-none"
+                                                    value={item.description || ''}
+                                                    onChange={e => updateSubItem(idx, 'description', e.target.value)}
+                                                />
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-4">

@@ -14,7 +14,9 @@ const propertySchema = new mongoose.Schema({
     logo: { type: String },
     heroImage: { type: String },
     payAtHotelEnabled: { type: Boolean, default: true },
-    partialPaymentPercentage: { type: Number, default: 25 }
+    partialPaymentPercentage: { type: Number, default: 25 },
+    lockedSections: { type: [String], default: [] },
+    masterPasscode: { type: String, default: '123456' }
 }, { timestamps: true });
 
 const Property = mongoose.model('Property', propertySchema);

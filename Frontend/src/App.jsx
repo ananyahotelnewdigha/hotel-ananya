@@ -42,6 +42,7 @@ import MediaMgmt from './modules/admin/pages/MediaMgmt';
 import ServiceMgmt from './modules/admin/pages/ServiceMgmt';
 import Messages from './modules/admin/pages/Messages';
 import AdminProfile from './modules/admin/pages/AdminProfile';
+import SuperAdminControl from './modules/admin/pages/SuperAdminControl';
 
 // Admin Inventory & Setup
 import Availability from './modules/admin/pages/inventory/Availability';
@@ -58,7 +59,7 @@ import TermsMgmt from './modules/admin/pages/setup/TermsMgmt';
 const AdminRoute = ({ children }) => {
   const { role, loading } = useAuth();
   if (loading) return <div>Loading...</div>;
-  return role === 'admin' ? children : <Navigate to="/admin/login" />;
+  return (role === 'admin' || role === 'superadmin') ? children : <Navigate to="/admin/login" />;
 };
 
 const UserRoute = ({ children }) => {
@@ -138,6 +139,7 @@ function App() {
               <Route path="services" element={<ServiceMgmt />} />
               <Route path="messages" element={<Messages />} />
               <Route path="profile" element={<AdminProfile />} />
+              <Route path="control" element={<SuperAdminControl />} />
 
               {/* Inventory Management */}
               <Route path="inventory/availability" element={<Availability />} />

@@ -27,7 +27,12 @@ const serviceSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
-    }
+    },
+    items: [{
+        name: String,
+        price: Number,
+        description: String
+    }]
 }, { timestamps: true });
 
 const Service = mongoose.model('Service', serviceSchema);
