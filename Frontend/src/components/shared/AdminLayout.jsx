@@ -152,12 +152,12 @@ const AdminLayout = () => {
                                             to={link.path}
                                             onClick={(e) => handleLinkClick(e, link)}
                                             className={`flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
-                                                ? 'bg-primary text-secondary shadow-lg shadow-primary/20'
-                                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                                                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                                : 'text-white/60 hover:text-white hover:bg-accent/10'
                                                 }`}
                                         >
-                                            <Icon size={18} className={`${isActive ? 'text-secondary' : 'text-primary/60 group-hover:text-primary'} transition-colors`} />
-                                            <span className="text-sm font-bold tracking-tight whitespace-nowrap">{link.name}</span>
+                                            <Icon size={18} className={`${isActive ? 'text-white' : 'text-primary/60 group-hover:text-accent'} transition-colors`} />
+                                            <span className="text-sm font-bold tracking-tight whitespace-nowrap group-hover:text-accent transition-colors">{link.name}</span>
                                             {isLocked && isSuperAdmin && <Lock size={12} className="text-rose-500 animate-pulse ml-auto" />}
                                         </Link>
                                     );

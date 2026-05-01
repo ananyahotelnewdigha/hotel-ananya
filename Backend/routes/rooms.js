@@ -217,7 +217,7 @@ router.post('/variants-with-pricing', async (req, res) => {
         }
 
         const meta = avgMeta;
-        const suggestedTotal = results[0]?.lowestTotal || 0; // Use the lowest price of the first variant as estimate
+        const suggestedTotal = (results.length > 0 && results[0].basePrice) ? results[0].basePrice * (checkIn && checkOut ? Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000)) : 1) : 0;
 
         res.json({
             variants: results,
@@ -442,7 +442,7 @@ router.post('/calculate-pricing', async (req, res) => {
                     let roomPrice = 0;
                     if (room.adults === 1) roomPrice = dayPrices.adult1;
                     else if (room.adults === 2) roomPrice = dayPrices.adult2;
-                    else roomPrice = dayPrices.adult2 + dayPrices.extraAdult;
+                    else roomPrice = dayPrices.adult2 + (room.adults - 2) * dayPrices.extraAdult;
 
                     roomPrice += (room.children * dayPrices.child);
                     total += roomPrice;

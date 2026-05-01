@@ -68,7 +68,12 @@ const Dip = () => {
                                     )}
                                 </div>
                                 <div className="px-4">
-                                    <h3 className="text-xl font-black text-secondary uppercase tracking-tight">{item.name}</h3>
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-xl font-black text-secondary uppercase tracking-tight">{item.name}</h3>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${item.isActive ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
+                                            {item.isActive ? 'Open' : 'Restricted'}
+                                        </span>
+                                    </div>
                                     <p className="text-sm text-slate-500 mt-2 font-medium leading-relaxed italic line-clamp-2">{item.description}</p>
 
                                     {/* Integrated Activity/Items List */}

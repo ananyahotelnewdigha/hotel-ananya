@@ -2,16 +2,19 @@ import { useState, useEffect } from 'react';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import { useWallet } from '../../../context/WalletContext';
-import { User, Mail, Shield, LogOut, Settings, CreditCard, History, ChevronRight, ChevronLeft, Star, MapPin, Bell, X, Heart } from 'lucide-react';
+import { User, Mail, Shield, LogOut, Settings, CreditCard, History, ChevronRight, ChevronLeft, Star, MapPin, Bell, X, Heart, Edit3, Trash2, AlertTriangle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { roomCategories } from '../../../utils/roomData';
 
 const Profile = () => {
-    const { user, logout, updateProfile, unreadCount, wishlist, toggleWishlist } = useAuth();
+    const { user, logout, updateProfile, unreadCount, fetchUnreadCount, wishlist, toggleWishlist } = useAuth();
     const { balance, transactions } = useWallet();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [bookingCount, setBookingCount] = useState(0);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     if (!user) {
         return (
@@ -39,8 +42,11 @@ const Profile = () => {
             }).catch(e => console.error(e));
 
             api.get(`/bookings/my/${user._id}`).then(res => setBookingCount(res.data.length)).catch(e => console.error(e));
+
+            // SYNC BADGE: Refresh notification count every time profile mounts
+            fetchUnreadCount();
         }
-    }, [user?._id]);
+    }, [user?._id, location.pathname]);
 
     const stats = [
         { label: 'Bookings', value: bookingCount },
@@ -56,7 +62,6 @@ const Profile = () => {
         { name: 'Wallet', desc: 'Balance & transactions', icon: CreditCard, path: '/wallet', color: 'text-emerald-500 bg-emerald-50' },
     ];
 
-    const location = useLocation();
     const isWishlistView = location.pathname === '/profile/wishlist';
 
     if (isWishlistView) {
@@ -172,7 +177,7 @@ const Profile = () => {
                         </div>
                         <div className="flex items-center gap-4">
                             <button onClick={() => navigate('/profile/details')} className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-white/70 hover:bg-white/10 hover:text-white transition-all">
-                                <Settings size={18} />
+                                <Edit3 size={18} />
                             </button>
                             <button onClick={() => navigate('/notifications')} className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-white/70 hover:bg-white/10 hover:text-white transition-all relative">
                                 <Bell size={18} />
@@ -270,19 +275,84 @@ const Profile = () => {
 
                 {/* Logout */}
                 <button onClick={() => { logout(); navigate('/login'); }}
-                    className="w-full bg-slate-50 rounded-xl border border-slate-100 p-4 flex items-center justify-between hover:bg-red-50 hover:border-red-100 transition-all group active:scale-[0.99]">
-                    <div className="flex items-center gap-3 text-slate-400 group-hover:text-red-500 transition-colors">
-                        <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-slate-100 group-hover:border-red-100">
+                    className="w-full bg-slate-50 rounded-xl border border-slate-100 p-4 flex items-center justify-between hover:bg-slate-100 transition-all group active:scale-[0.99]">
+                    <div className="flex items-center gap-3 text-slate-400 group-hover:text-secondary transition-colors">
+                        <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-slate-100">
                             <LogOut size={16} />
                         </div>
                         <div className="text-left">
                             <p className="font-bold text-xs uppercase tracking-tight">Sign Out</p>
-                            <p className="text-slate-400 text-[9px] mt-0.5 group-hover:text-red-400">See you again soon.</p>
+                            <p className="text-slate-400 text-[9px] mt-0.5">See you again soon.</p>
                         </div>
                     </div>
-                    <ChevronRight size={14} className="text-slate-200 group-hover:text-red-200" />
+                    <ChevronRight size={14} className="text-slate-200" />
+                </button>
+
+                {/* Delete Account */}
+                <button onClick={() => setIsDeleteModalOpen(true)}
+                    className="w-full bg-rose-50/30 rounded-xl border border-rose-100/50 p-4 flex items-center justify-between hover:bg-rose-50 hover:border-rose-200 transition-all group active:scale-[0.99]">
+                    <div className="flex items-center gap-3 text-rose-400 group-hover:text-rose-600 transition-colors">
+                        <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-rose-100 group-hover:border-rose-200">
+                            <Trash2 size={16} />
+                        </div>
+                        <div className="text-left">
+                            <p className="font-bold text-xs uppercase tracking-tight">Delete Account</p>
+                            <p className="text-rose-400/60 text-[9px] mt-0.5 group-hover:text-rose-500">Permanently wipe your data.</p>
+                        </div>
+                    </div>
+                    <ChevronRight size={14} className="text-rose-200 group-hover:text-rose-400" />
                 </button>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-secondary/80 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-xs rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 text-center space-y-6">
+                            <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto ring-8 ring-rose-50/50">
+                                <AlertTriangle size={32} />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <h2 className="text-secondary text-xl font-bold uppercase tracking-tight">Final Farewell?</h2>
+                                <p className="text-slate-400 text-[10px] font-medium leading-relaxed px-2">
+                                    This action is <span className="text-rose-500 font-bold uppercase">irreversible</span>. Your wallet balance, bookings, and profile data will be permanently erased from our sanctuaries.
+                                </p>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                                <button
+                                    disabled={isDeleting}
+                                    onClick={async () => {
+                                        setIsDeleting(true);
+                                        try {
+                                            await api.delete(`/users/${user._id}`);
+                                            logout();
+                                            navigate('/login');
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert('Protocol failure: Account deletion failed.');
+                                        } finally {
+                                            setIsDeleting(false);
+                                            setIsDeleteModalOpen(false);
+                                        }
+                                    }}
+                                    className="w-full bg-rose-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-rose-500/20 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {isDeleting ? 'Erasing Data...' : 'Confirm Destruction'}
+                                </button>
+                                <button
+                                    disabled={isDeleting}
+                                    onClick={() => setIsDeleteModalOpen(false)}
+                                    className="w-full bg-slate-50 text-slate-500 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

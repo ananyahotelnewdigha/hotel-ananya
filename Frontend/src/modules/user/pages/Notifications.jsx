@@ -8,7 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const Notifications = () => {
-    const { user, fetchUnreadCount } = useAuth();
+    const { user, fetchUnreadCount, setUnreadCount } = useAuth();
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -31,25 +31,51 @@ const Notifications = () => {
 
     const markAsRead = async (id) => {
         try {
-            await api.patch(`/notifications/${id}/read`);
+            // Optimistic update
             setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+
+            await api.patch(`/notifications/${id}/read`);
             fetchUnreadCount();
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            console.error(e);
+            fetchNotifications(); // Rollback
+            fetchUnreadCount();
+        }
     };
 
     const markAllRead = async () => {
         try {
-            await api.patch(`/notifications/read-all/${user._id}`);
+            // Optimistic update
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            setUnreadCount(0);
+            
+            await api.patch(`/notifications/read-all/${user._id}`);
             fetchUnreadCount();
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            console.error(e);
+            fetchNotifications(); // Rollback on error
+            fetchUnreadCount();
+        }
     };
 
     const deleteNotification = async (id) => {
         try {
-            await api.delete(`/notifications/${id}`);
+            const notificationToDelete = notifications.find(n => n._id === id);
+            
+            // Optimistic update
             setNotifications(prev => prev.filter(n => n._id !== id));
-        } catch (e) { console.error(e); }
+            if (notificationToDelete && !notificationToDelete.isRead) {
+                setUnreadCount(prev => Math.max(0, prev - 1));
+            }
+
+            await api.delete(`/notifications/${id}`);
+            fetchUnreadCount();
+        } catch (e) { 
+            console.error(e);
+            fetchNotifications(); // Rollback
+            fetchUnreadCount();
+        }
     };
 
     const getIcon = (type) => {

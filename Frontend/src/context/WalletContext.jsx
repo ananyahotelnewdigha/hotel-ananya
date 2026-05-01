@@ -14,22 +14,23 @@ export const WalletProvider = ({ children }) => {
         { id: 'LUXE20', code: 'LUXE20', discount: 20, description: '20% off on suites' }
     ]);
 
-    useEffect(() => {
-        const fetchWalletData = async () => {
-            if (user?._id) {
-                setLoading(true);
-                try {
-                    const { data: transData } = await api.get(`/transactions/my/${user._id}`);
-                    setTransactions(transData);
-                    // Balance is stored on the user object too, but we might want a dedicated field or sum
-                    setBalance(user.walletBalance || 0);
-                } catch (error) {
-                    console.error('Error fetching wallet data:', error);
-                } finally {
-                    setLoading(false);
-                }
+    const fetchWalletData = async () => {
+        if (user?._id) {
+            setLoading(true);
+            try {
+                const { data: transData } = await api.get(`/transactions/my/${user._id}`);
+                setTransactions(transData);
+                // Balance is stored on the user object too, but we might want a dedicated field or sum
+                setBalance(user.walletBalance || 0);
+            } catch (error) {
+                console.error('Error fetching wallet data:', error);
+            } finally {
+                setLoading(false);
             }
-        };
+        }
+    };
+
+    useEffect(() => {
         fetchWalletData();
     }, [user]);
 
@@ -70,7 +71,7 @@ export const WalletProvider = ({ children }) => {
     };
 
     return (
-        <WalletContext.Provider value={{ balance, transactions, coupons, addFunds, deductFunds, verifyAndAddFunds }}>
+        <WalletContext.Provider value={{ balance, transactions, coupons, addFunds, deductFunds, verifyAndAddFunds, refreshWallet: fetchWalletData }}>
             {children}
         </WalletContext.Provider>
     );

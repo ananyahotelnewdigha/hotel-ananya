@@ -30,14 +30,11 @@ const FeaturedStays = () => {
         const shareData = {
             title: `Hotel Ananya - ${room.type}`,
             text: `Check out this amazing ${room.type} at Hotel Ananya!`,
-            url: window.location.origin + '/rooms'
+            url: window.location.origin + '/rooms?type=' + encodeURIComponent(room.type)
         };
 
         if (navigator.share) {
             navigator.share(shareData).catch(() => { });
-        } else {
-            navigator.clipboard.writeText(shareData.url);
-            toast.success('Link copied to clipboard');
         }
     };
 

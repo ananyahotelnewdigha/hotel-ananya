@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }) => {
     return (
         <AuthContext.Provider value={{
             user, role, isSuperAdmin, login, signup, verifyOtp, logout, updateProfile,
-            loading, unreadCount, fetchUnreadCount, wishlist, toggleWishlist
+            loading, unreadCount, setUnreadCount, fetchUnreadCount, wishlist, toggleWishlist
         }}>
             {children}
         </AuthContext.Provider>

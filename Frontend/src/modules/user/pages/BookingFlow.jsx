@@ -21,7 +21,7 @@ const nights = (ci, co) => {
 };
 
 const BookingFlow = () => {
-    const { user } = useAuth();
+    const { user, updateProfile } = useAuth();
     const { balance } = useWallet();
     const navigate = useNavigate();
     const location = useLocation();
@@ -73,7 +73,7 @@ const BookingFlow = () => {
             window.scrollTo({ top: 0, behavior: 'instant' });
         }, 10);
         return () => clearTimeout(timer);
-    }, [location.key]);
+    }, [location.key, step]);
 
     useEffect(() => {
         api.get('/setup/property').then(res => {
@@ -99,7 +99,7 @@ const BookingFlow = () => {
                 const fetchedVariants = res.data.variants;
                 setVariants(fetchedVariants);
                 setPricingMeta(res.data.pricingMeta);
-                if (!selectedPlan) setTotalPrice(res.data.suggestedTotal);
+                if (res.data.suggestedTotal > 0) setTotalPrice(res.data.suggestedTotal);
 
                 // Show toast if ALL variants are blocked
                 if (dates.checkIn && dates.checkOut && fetchedVariants.length > 0) {
@@ -274,6 +274,10 @@ const BookingFlow = () => {
                 bookingId,
                 paymentMethod: 'wallet'
             });
+
+            // UPDATE LOCAL STATE: Sync wallet balance immediately
+            updateProfile({ walletBalance: user.walletBalance - amountToPayNow });
+
             setStep(4);
         } catch (error) {
             alert(error.response?.data?.message || 'Booking failed');
@@ -488,9 +492,9 @@ const BookingFlow = () => {
                                                         }}
                                                         className="w-full bg-slate-50 border border-slate-200 rounded-sm px-2 py-1.5 text-[9px] font-bold text-secondary outline-none appearance-none uppercase transition-all hover:border-primary/30"
                                                     >
-                                                        <option value="1">1 Adult @ ₹{pricingMeta?.adult1 || 0}</option>
-                                                        <option value="2">2 Adults @ ₹{pricingMeta?.adult2 || 0}</option>
-                                                        <option value="3">3 Adults (Incl. Extra) @ ₹{(pricingMeta?.adult2 || 0) + (pricingMeta?.extraAdult || 0)}</option>
+                                                        <option value="1">1 Adult @ ₹{(pricingMeta?.adult1 || 0).toLocaleString()}</option>
+                                                        <option value="2">2 Adults @ ₹{(pricingMeta?.adult2 || 0).toLocaleString()}</option>
+                                                        <option value="3">3 Adults (Incl. Extra) @ ₹{((pricingMeta?.adult2 || 0) + (pricingMeta?.extraAdult || 0)).toLocaleString()}</option>
                                                     </select>
                                                     <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                                                 </div>
@@ -507,8 +511,7 @@ const BookingFlow = () => {
                                                         className="w-full bg-slate-50 border border-slate-200 rounded-sm px-2 py-1.5 text-[9px] font-bold text-secondary outline-none appearance-none uppercase transition-all hover:border-primary/30"
                                                     >
                                                         <option value="0">0 Child</option>
-                                                        <option value="1">1 Child @ ₹{pricingMeta?.child || 0}</option>
-                                                        <option value="2">2 Kids @ ₹{(pricingMeta?.child || 0) * 2}</option>
+                                                        <option value="1">1 Child @ ₹{(pricingMeta?.child || 0).toLocaleString()}</option>
                                                     </select>
                                                     <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                                                 </div>

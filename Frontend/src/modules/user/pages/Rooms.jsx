@@ -121,11 +121,17 @@ const Rooms = () => {
     }, []);
 
     useEffect(() => {
+        // SHARED LINK SUPPORT: Read room type from URL query params (e.g., /rooms?type=Double+Bed+A/C)
+        const params = new URLSearchParams(location.search);
+        const typeFromUrl = params.get('type');
+
         if (location.state?.initialSearch) {
             setSearch(location.state.initialSearch);
             window.history.replaceState({}, document.title);
+        } else if (typeFromUrl) {
+            setSearch(typeFromUrl);
         }
-    }, [location.state]);
+    }, [location.state, location.search]);
 
     const getRoomCategory = (name) => {
         const n = name.toLowerCase();

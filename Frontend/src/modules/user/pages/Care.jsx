@@ -51,15 +51,25 @@ const Care = () => {
                 ) : (
                     items.map((item) => (
                         <div key={item._id} className="bg-white rounded-[2.5rem] p-6 lg:p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 group">
-                            <div className="w-16 h-16 bg-primary/5 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:bg-primary transition-all duration-500">
                                 {item.image ? (
-                                    <img src={item.image} className="w-10 h-10 rounded-xl object-cover" alt={item.name} />
+                                    <div className="aspect-[16/10] rounded-[2.5rem] overflow-hidden relative shadow-sm group-hover:shadow-2xl transition-all duration-700 mb-6">
+                                        <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={item.name} />
+                                        <div className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-md rounded-2xl text-[9px] font-black uppercase tracking-widest text-secondary shadow-xl">
+                                            {item.category}
+                                        </div>
+                                    </div>
                                 ) : (
-                                    <Heart className="text-primary group-hover:text-secondary transition-colors" size={28} />
+                                    <div className="w-16 h-16 bg-primary/5 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:bg-primary transition-all duration-500">
+                                        <Heart className="text-primary group-hover:text-secondary transition-colors" size={28} />
+                                    </div>
                                 )}
-                            </div>
                             <span className="text-[9px] font-black uppercase text-primary tracking-[0.2em]">{item.category}</span>
-                            <h3 className="text-2xl font-black text-secondary mt-2 lowercase capitalize">{item.name}</h3>
+                            <div className="flex justify-between items-start mt-2">
+                                <h3 className="text-2xl font-black text-secondary lowercase capitalize leading-tight">{item.name}</h3>
+                                <span className={`text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${item.isActive ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
+                                    {item.isActive ? 'Open' : 'Closed'}
+                                </span>
+                            </div>
                             <p className="text-xs text-slate-500 mt-4 font-medium leading-relaxed italic">{item.description}</p>
 
                             {/* Integrated Therapy/Items List */}

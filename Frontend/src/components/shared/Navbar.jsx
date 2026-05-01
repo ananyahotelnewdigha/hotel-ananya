@@ -9,7 +9,8 @@ const Navbar = () => {
     const [scrolled, setScrolled] = useState(false);
     const location = useLocation();
     const { user, unreadCount } = useAuth();
-    const { balance } = useWallet();
+    const walletContext = useWallet();
+    const balance = walletContext?.balance ?? 0;
 
     // Pages that have a dark hero/background where white text is needed
     const isHeroPage = location.pathname === '/';

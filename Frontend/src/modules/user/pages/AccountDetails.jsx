@@ -160,13 +160,13 @@ const AccountDetails = () => {
 
             {/* Header */}
             <div className="bg-white border-b border-slate-100 shadow-sm px-4 py-4 flex items-center gap-3">
-                <button onClick={() => navigate('/')}
+                <button onClick={() => navigate('/profile')}
                     className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center text-secondary active:scale-90 transition-all">
                     <ChevronLeft size={18} />
                 </button>
                 <div>
-                    <p className="text-[8px] font-black text-primary uppercase tracking-[0.4em]">Settings</p>
-                    <h1 className="text-sm font-bold text-secondary">Account Details</h1>
+                    <p className="text-[8px] font-black text-primary uppercase tracking-[0.4em]">Profile</p>
+                    <h1 className="text-sm font-bold text-secondary">Edit Profile</h1>
                 </div>
                 <div className="ml-auto">
                     {isEditing ? (

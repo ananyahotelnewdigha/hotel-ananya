@@ -120,7 +120,8 @@ const ServiceMgmt = () => {
             description: '',
             price: 0,
             image: '',
-            isActive: true
+            isActive: true,
+            items: []
         });
         setPreviewUrl('');
     };
@@ -145,7 +146,7 @@ const ServiceMgmt = () => {
                 <button
                     onClick={() => {
                         setEditingItem(null);
-                        setFormData({ ...formData, type: activeTab });
+                        resetForm(); // Ensure form is empty for new entry
                         setIsModalOpen(true);
                     }}
                     className="w-full sm:w-auto bg-secondary text-white px-6 lg:px-8 py-3.5 rounded-2xl font-black uppercase tracking-widest text-[9px] lg:text-[10px] shadow-xl hover:shadow-secondary/20 transition-all flex items-center justify-center gap-2 group active:scale-95"
@@ -277,7 +278,18 @@ const ServiceMgmt = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Service Asset Image</label>
+                                <div className="flex justify-between items-center ml-1">
+                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Service Asset Image</label>
+                                    {(formData.image || previewUrl) && (
+                                        <button 
+                                            type="button" 
+                                            onClick={() => { setFormData({...formData, image: ''}); setPreviewUrl(''); }}
+                                            className="text-[8px] font-bold text-rose-500 uppercase tracking-widest hover:underline"
+                                        >
+                                            Remove Image
+                                        </button>
+                                    )}
+                                </div>
                                 <div className={`relative h-40 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 overflow-hidden transition-all
                                     ${formData.image || previewUrl ? 'border-primary/50 bg-slate-50' : 'border-slate-100 bg-slate-50 hover:bg-slate-100'}`}>
 
@@ -304,12 +316,15 @@ const ServiceMgmt = () => {
                                     />
 
                                     {uploading && (
-                                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
-                                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-20">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                                <span className="text-[8px] font-black uppercase text-primary">Uploading...</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
-                                {formData.image && <p className="text-[8px] text-slate-400 truncate mt-1">Stored: {formData.image}</p>}
+                                {formData.image && <p className="text-[8px] text-emerald-500 font-bold uppercase tracking-widest mt-1 ml-1">✓ Image Ready</p>}
                             </div>
 
                             <div className="space-y-4">

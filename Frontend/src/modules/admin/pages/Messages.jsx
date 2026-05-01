@@ -230,10 +230,12 @@ const Messages = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="sticky top-24 bg-primary/5 rounded-[2.5rem] p-10 border-2 border-dashed border-primary/20 flex flex-col items-center text-center">
-                            <Eye size={40} className="text-primary mb-6 animate-bounce" />
-                            <h4 className="text-secondary font-black text-xs lg:text-sm mb-2 tracking-widest uppercase">Intellectual Viewport</h4>
-                            <p className="text-[10px] text-slate-400 font-medium italic leading-relaxed">Select a correspondence transmission from the ledger to view detailed analytics and operational responses.</p>
+                        <div className="sticky top-24 bg-primary/5 rounded-[2.5rem] p-10 border-2 border-dashed border-primary/20 flex flex-col items-center text-center h-fit">
+                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-6">
+                                <Eye size={32} className="text-primary animate-pulse" />
+                            </div>
+                            <h4 className="text-secondary font-serif text-lg mb-2 tracking-widest uppercase">Intellectual Viewport</h4>
+                            <p className="text-[10px] text-slate-400 font-medium italic leading-relaxed max-w-[200px]">Select a correspondence transmission from the ledger to view detailed analytics and operational responses.</p>
                         </div>
                     )}
                 </div>

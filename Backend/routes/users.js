@@ -64,4 +64,43 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+// @desc    Delete user account and all associated data
+// @route   DELETE /api/users/:id
+router.delete('/:id', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // 1. Delete associated data (Optional: You might want to keep some records for audit, but usually for "delete account", we wipe personalized data)
+        // We'll import these models dynamically or at top if needed. 
+        // For now, let's assume we want a clean wipe.
+        
+        // Note: In a real production app, you might "Soft Delete" or anonymize.
+        // But the user requested "permanently delete".
+        
+        // Dynamically import models to avoid circular dependencies if any
+        const Booking = (await import('../models/Booking.js')).default;
+        const Transaction = (await import('../models/Transaction.js')).default;
+        const Notification = (await import('../models/Notification.js')).default;
+        const Message = (await import('../models/Message.js')).default;
+
+        await Promise.all([
+            Booking.deleteMany({ user: userId }),
+            Transaction.deleteMany({ user: userId }),
+            Notification.deleteMany({ userId: userId }),
+            Message.deleteMany({ user: userId }),
+            User.findByIdAndDelete(userId)
+        ]);
+
+        res.json({ success: true, message: 'Account and all associated data deleted permanently.' });
+    } catch (error) {
+        console.error('Delete User Error:', error);
+        res.status(500).json({ message: 'Error deleting account', error: error.message });
+    }
+});
+
 export default router;

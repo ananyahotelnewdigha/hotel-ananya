@@ -1,12 +1,17 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Settings, Bell, Search, User } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Bell, Search, User } from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext';
 
 const HomeHeader = () => {
     const navigate = useNavigate();
-    const { user, unreadCount } = useAuth();
+    const location = useLocation();
+    const { user, unreadCount, fetchUnreadCount } = useAuth();
 
+    // SYNC BADGE: Refresh notification count when returning to home
+    useEffect(() => {
+        if (user?._id) fetchUnreadCount();
+    }, [location.pathname]);
     return (
         <div className="md:hidden sticky top-0 bg-white/95 backdrop-blur-xl z-50 border-b border-slate-100 px-4 py-3 shadow-sm">
             <div className="flex items-center justify-between mb-3">
@@ -19,12 +24,7 @@ const HomeHeader = () => {
                     />
                 </div>
                 <div className="flex items-center space-x-2">
-                    <button
-                        onClick={() => navigate('/profile/details')}
-                        className="p-2 text-secondary active:scale-95 transition-all"
-                    >
-                        <Settings size={18} strokeWidth={1.5} />
-                    </button>
+
                     <button
                         onClick={() => navigate('/notifications')}
                         className="p-2 text-secondary active:scale-95 transition-all relative"

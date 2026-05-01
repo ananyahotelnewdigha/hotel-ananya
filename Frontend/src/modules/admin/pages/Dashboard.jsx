@@ -101,8 +101,8 @@ const StatCard = ({ label, value, sub, icon: Icon, trend, color, accentColor, sp
                 </div>
                 {trend && (
                     <div className={`flex items-center gap-1 text-[9px] font-black px-2 py-1 rounded-full border ${trend > 0
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                            : 'bg-rose-50 text-rose-600 border-rose-100'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        : 'bg-rose-50 text-rose-600 border-rose-100'
                         }`}
                     >
                         {trend > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
@@ -250,7 +250,7 @@ const Dashboard = () => {
                                 <h3 className="text-xl font-serif text-secondary lowercase">Recent <span className="text-primary italic">manifest</span></h3>
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Live tracking active</p>
                             </div>
-                            <Link to="/admin/bookings" className="text-[9px] font-black text-primary hover:text-secondary uppercase tracking-widest flex items-center gap-1 group">
+                            <Link to="/admin/bookings" className="text-[9px] font-black text-accent hover:text-primary uppercase tracking-widest flex items-center gap-1 group">
                                 Registry <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </div>
@@ -265,7 +265,7 @@ const Dashboard = () => {
                                     className="group p-3 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-xl transition-all duration-500 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center"
                                 >
                                     <div className="col-span-12 sm:col-span-5 flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-secondary text-accent flex items-center justify-center text-xs font-serif font-black shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                                        <div className="w-8 h-8 rounded-lg bg-secondary text-accent flex items-center justify-center text-xs font-serif font-black shrink-0 group-hover:bg-accent group-hover:text-secondary transition-colors">
                                             {bk.user?.name?.[0] || '?'}
                                         </div>
                                         <div className="min-w-0">
@@ -284,8 +284,8 @@ const Dashboard = () => {
 
                                     <div className="col-span-3 sm:col-span-2 sm:text-center">
                                         <span className={`inline-flex px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all ${bk.bookingStatus === 'confirmed'
-                                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white'
-                                                : 'bg-amber-50 text-amber-600 border-amber-100 group-hover:bg-amber-600 group-hover:text-white'
+                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-accent group-hover:text-secondary'
+                                            : 'bg-amber-50 text-amber-600 border-amber-100 group-hover:bg-accent group-hover:text-secondary'
                                             }`}>
                                             {bk.bookingStatus}
                                         </span>
