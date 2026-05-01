@@ -1,11 +1,31 @@
 import Razorpay from 'razorpay';
 import dotenv from 'dotenv';
 
-dotenv.config();
+let instance = null;
+let cachedKeyId = null;
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
+const getRazorpayInstance = () => {
+    dotenv.config();
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!instance || cachedKeyId !== keyId) {
+        instance = new Razorpay({
+            key_id: keyId,
+            key_secret: keySecret,
+        });
+        cachedKeyId = keyId;
+    }
+    return instance;
+};
+
+// Export a proxy that always uses the latest instance
+const razorpayProxy = new Proxy({}, {
+    get: (target, prop) => {
+        const rzp = getRazorpayInstance();
+        return rzp[prop];
+    }
 });
 
-export default razorpay;
+export default razorpayProxy;
+

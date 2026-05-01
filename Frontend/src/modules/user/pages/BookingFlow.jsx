@@ -12,6 +12,8 @@ import api from '../../../services/api';
 import { getAmenityIcon } from '../../../utils/amenityIcons';
 import { jsPDF } from 'jspdf';
 import { toast } from 'react-hot-toast';
+import { initRazorpayPayment } from '../../../lib/utils/razorpay';
+
 
 /* ─── helpers ─────────────────────────────────────── */
 const nights = (ci, co) => {
@@ -144,16 +146,8 @@ const BookingFlow = () => {
         }
     }, [selectedPlan, dates.checkIn, dates.checkOut, roomDetails]);
 
-    // Load Razorpay Script
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        document.body.appendChild(script);
-        return () => {
-            if (document.body.contains(script)) document.body.removeChild(script);
-        };
-    }, []);
+    // Razorpay script loading is now handled by the utility
+
 
     // Prevent back navigation after confirmation
     useEffect(() => {
@@ -285,12 +279,6 @@ const BookingFlow = () => {
     };
 
     const handleRazorpayPayment = async () => {
-        if (!window.Razorpay) {
-            api.get('/rooms/categories'); // dummy to trigger refresh if script failed
-            alert('Payment gateway is still loading. Please wait a few seconds.');
-            return;
-        }
-
         if (!user) {
             alert('Your session has expired. Please log in again to continue.');
             navigate('/login');
@@ -303,13 +291,19 @@ const BookingFlow = () => {
                 receipt: bookingId
             });
 
-            const options = {
+            await initRazorpayPayment({
                 key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: order.amount,
                 currency: order.currency,
                 name: 'Hotel Ananya',
                 description: `${selectedVariant?.name}: ${selectedPlan?.planName}`,
                 order_id: order.id,
+                prefill: { 
+                    name: user?.name || '', 
+                    email: user?.email || '',
+                    contact: user?.phone || ''
+                },
+                theme: { color: '#1e293b' },
                 handler: async (response) => {
                     try {
                         const { data: verifyData } = await api.post('/payments/verify-payment', response);
@@ -336,19 +330,17 @@ const BookingFlow = () => {
                         alert('Payment verification failed.');
                     }
                 },
-                prefill: { name: user?.name || '', email: user?.email || '' },
-                theme: { color: '#1e293b' },
-            };
-
-            const rzp = new window.Razorpay(options);
-            rzp.on('payment.failed', (r) => alert(`Payment Failure: ${r.error.description}`));
-            rzp.open();
+                onError: (err) => {
+                    alert(`Payment Failure: ${err.description || 'Unknown error'}`);
+                }
+            });
 
         } catch (error) {
             const serverMsg = error.response?.data?.message || 'Gateway unreachable';
             alert(`Payment Error: ${serverMsg}`);
         }
     };
+
 
     if (!room) return <div className="p-20 text-center"><button onClick={() => navigate('/rooms')} className="bg-secondary text-white px-8 py-3 rounded-xl">Go Back</button></div>;
 

@@ -1,7 +1,7 @@
 import express from 'express';
 import Transaction from '../models/Transaction.js';
 import User from '../models/User.js';
-import Razorpay from 'razorpay';
+import razorpay from '../config/razorpay.js';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { sendNotificationToUser, notifyAdmins } from '../utils/notificationHelper.js';
@@ -10,10 +10,6 @@ dotenv.config();
 
 const router = express.Router();
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
 
 // @desc    Get user transactions
 router.get('/my/:userId', async (req, res) => {

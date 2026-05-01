@@ -7,6 +7,8 @@ import {
     CreditCard, ArrowUpRight, ArrowDownLeft, Plus, Ticket,
     Sparkles, TrendingUp, X, Check
 } from 'lucide-react';
+import { initRazorpayPayment } from '../../../lib/utils/razorpay';
+
 
 const quickAmounts = [500, 1000, 2000, 5000];
 
@@ -29,20 +31,29 @@ const Wallet = () => {
             // 1. Create order on backend
             const { data: order } = await api.post('/transactions/create-order', { amount: Number(amount) });
 
-            const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_8sYbzHWidwe5Zw',
+            // 2. Initialize payment using utility
+            // Requirement: Close modal/bottom-sheet before opening Checkout
+            setShowModal(false);
+
+            await initRazorpayPayment({
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
                 amount: order.amount,
                 currency: order.currency,
+                order_id: order.id,
                 name: "Ananya Hotel",
                 description: "Wallet Recharge",
-                order_id: order.id,
+                prefill: {
+                    name: user?.name || "",
+                    email: user?.email || "",
+                    contact: user?.phone || ""
+                },
                 handler: async (response) => {
+                    setLoadingPayment(true);
                     const success = await verifyAndAddFunds(response, Number(amount));
                     if (success) {
                         setSuccess(true);
                         setTimeout(() => {
                             setSuccess(false);
-                            setShowModal(false);
                             setAmount('');
                         }, 2000);
                     } else {
@@ -50,25 +61,20 @@ const Wallet = () => {
                     }
                     setLoadingPayment(false);
                 },
-                prefill: {
-                    name: user?.name || "",
-                    email: user?.email || "",
-                    contact: user?.phone || ""
-                },
-                theme: { color: "#1E293B" }, // Secondary color
-                modal: {
-                    ondismiss: () => setLoadingPayment(false)
+                onClose: () => setLoadingPayment(false),
+                onError: (error) => {
+                    console.error('Payment failed:', error);
+                    alert(error.description || "Payment failed. Please try again.");
+                    setLoadingPayment(false);
                 }
-            };
-
-            const rzp = new window.Razorpay(options);
-            rzp.open();
+            });
 
         } catch (error) {
             console.error('Payment initiation failed:', error);
             alert("Could not initiate payment. Try again.");
             setLoadingPayment(false);
         }
+
     };
 
     const handleCopy = (code) => {
