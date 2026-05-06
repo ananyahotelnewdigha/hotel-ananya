@@ -81,6 +81,11 @@ export const AuthProvider = ({ children }) => {
     // Login logic updated for 2FA
     const login = async (email, password) => {
         try {
+            // Request push permissions EARLY while the user gesture is still active (prevents Safari blocking)
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().catch(() => {});
+            }
+
             const { data } = await api.post('/auth/login', { email, password });
             if (data.otpRequired) {
                 return { otpRequired: true, email: data.email, mobile: data.mobile };
@@ -114,6 +119,11 @@ export const AuthProvider = ({ children }) => {
     // OTP Verification - Finalizes the session
     const verifyOtp = async (email, otp) => {
         try {
+            // Request push permissions EARLY while the user gesture is still active (prevents Safari blocking)
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().catch(() => {});
+            }
+
             const { data } = await api.post('/auth/verify-otp', { email, otp });
             if (data.success) {
                 const userData = data.user;

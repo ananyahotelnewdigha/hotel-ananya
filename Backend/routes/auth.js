@@ -123,13 +123,15 @@ router.post('/verify-otp', async (req, res) => {
                 // Clear temporary record
                 await PendingUser.findByIdAndDelete(pending._id);
 
-                // Send Welcome Notification
-                sendNotificationToUser(
-                    user._id,
-                    "Welcome to Ananya Hotel! 🎉",
-                    "We are thrilled to have you here. Explore our premium rooms and services.",
-                    { type: 'system', link: '/' }
-                );
+                // Send Welcome Notification after a short delay to allow FCM token registration
+                setTimeout(() => {
+                    sendNotificationToUser(
+                        user._id,
+                        "Welcome to Ananya Hotel! 🎉",
+                        "We are thrilled to have you here. Explore our premium rooms and services.",
+                        { type: 'system', link: '/' }
+                    );
+                }, 4000);
 
                 return res.json({
                     success: true,
@@ -160,13 +162,15 @@ router.post('/verify-otp', async (req, res) => {
             existingUser.otp = null;
             await existingUser.save();
 
-            // Send Login Notification
-            sendNotificationToUser(
-                existingUser._id,
-                "New Login Detected 🔐",
-                `Your account was accessed just now. If this wasn't you, please secure your account.`,
-                { type: 'system', link: '/profile' }
-            );
+            // Send Login Notification after a short delay to allow FCM token registration
+            setTimeout(() => {
+                sendNotificationToUser(
+                    existingUser._id,
+                    "New Login Detected 🔐",
+                    `Your account was accessed just now. If this wasn't you, please secure your account.`,
+                    { type: 'system', link: '/profile' }
+                );
+            }, 4000);
 
             return res.json({
                 success: true,
@@ -207,13 +211,16 @@ router.post('/login', async (req, res) => {
         if (user && (await user.matchPassword(password))) {
             // BYPASS OTP for admins and special test user
             if (user.role === 'admin' || user.email === 'b@gmail.com') {
-                // Send Login Notification
-                sendNotificationToUser(
-                    user._id,
-                    "Admin Access Granted 🛡️",
-                    `Administrative login detected on your account.`,
-                    { type: 'system', link: '/admin' }
-                );
+                // Send Login Notification after a short delay to allow FCM token registration
+                const isAdmin = user.role === 'admin';
+                setTimeout(() => {
+                    sendNotificationToUser(
+                        user._id,
+                        isAdmin ? "Admin Access Granted 🛡️" : "New Login Detected 🔐",
+                        isAdmin ? `Administrative login detected on your account.` : `Your account was accessed just now. If this wasn't you, please secure your account.`,
+                        { type: 'system', link: isAdmin ? '/admin' : '/profile' }
+                    );
+                }, 4000);
 
                 return res.json({
                     success: true,
