@@ -12,8 +12,13 @@ const Login = () => {
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
     const [resendTimer, setResendTimer] = useState(0);
-    const { login, verifyOtp } = useAuth();
+    const { login, verifyOtp, logout } = useAuth();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        logout();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         let timer;

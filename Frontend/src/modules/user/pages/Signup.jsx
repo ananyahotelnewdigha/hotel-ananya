@@ -23,11 +23,11 @@ const Signup = () => {
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
     const [picLoading, setPicLoading] = useState(false);
-    const { signup, user, verifyOtp } = useAuth();
+    const { signup, user, verifyOtp, logout } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (user) navigate('/');
+        logout();
 
         // Restore progress on mount
         const savedProgress = sessionStorage.getItem('signup_progress');
@@ -36,7 +36,8 @@ const Signup = () => {
             setStep(savedStep);
             setFormData(savedData);
         }
-    }, [user, navigate]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Persist progress on change
     useEffect(() => {

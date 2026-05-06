@@ -32,6 +32,19 @@ app.use(express.urlencoded({ extended: true })); // ADDED for better mobile app 
 
 const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ['http://localhost:5173'];
 
+// Prevent caching of API responses (Web Only)
+app.use((req, res, next) => {
+    // Check if the request is coming from a web browser
+    const isWeb = req.headers.origin || (req.headers['user-agent'] && req.headers['user-agent'].toLowerCase().includes('mozilla'));
+    
+    if (isWeb) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
+
 app.use(cors({
     origin: function (origin, callback) {
         // allow requests with no origin (like mobile apps or curl requests)

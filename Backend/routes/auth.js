@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import PendingUser from '../models/PendingUser.js';
 import { sendOTP } from '../utils/smsHelper.js';
+import { sendNotificationToUser } from '../utils/notificationHelper.js';
 
 const router = express.Router();
 
@@ -122,6 +123,14 @@ router.post('/verify-otp', async (req, res) => {
                 // Clear temporary record
                 await PendingUser.findByIdAndDelete(pending._id);
 
+                // Send Welcome Notification
+                sendNotificationToUser(
+                    user._id,
+                    "Welcome to Ananya Hotel! 🎉",
+                    "We are thrilled to have you here. Explore our premium rooms and services.",
+                    { type: 'system', link: '/' }
+                );
+
                 return res.json({
                     success: true,
                     message: 'Registration finalized successfully',
@@ -150,6 +159,14 @@ router.post('/verify-otp', async (req, res) => {
         if (existingUser.otp === otp) {
             existingUser.otp = null;
             await existingUser.save();
+
+            // Send Login Notification
+            sendNotificationToUser(
+                existingUser._id,
+                "New Login Detected 🔐",
+                `Your account was accessed just now. If this wasn't you, please secure your account.`,
+                { type: 'system', link: '/profile' }
+            );
 
             return res.json({
                 success: true,
@@ -190,6 +207,14 @@ router.post('/login', async (req, res) => {
         if (user && (await user.matchPassword(password))) {
             // BYPASS OTP for admins and special test user
             if (user.role === 'admin' || user.email === 'b@gmail.com') {
+                // Send Login Notification
+                sendNotificationToUser(
+                    user._id,
+                    "Admin Access Granted 🛡️",
+                    `Administrative login detected on your account.`,
+                    { type: 'system', link: '/admin' }
+                );
+
                 return res.json({
                     success: true,
                     message: `${user.role === 'admin' ? 'Admin' : 'Test'} login successful`,

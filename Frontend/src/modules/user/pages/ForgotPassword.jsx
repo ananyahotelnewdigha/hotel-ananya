@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
 import { Mail, ShieldCheck, Lock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 
@@ -11,6 +12,12 @@ const ForgotPassword = () => {
     const [step, setStep] = useState(1); // 1: Email, 2: OTP & New Password
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { logout } = useAuth();
+
+    useEffect(() => {
+        if (logout) logout();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleSendOtp = async (e) => {
         e.preventDefault();

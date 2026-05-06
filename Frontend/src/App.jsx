@@ -68,9 +68,20 @@ const UserRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" />;
 };
 
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
+  useEffect(() => {
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   return (
     <AuthProvider>
       <WalletProvider>
