@@ -70,7 +70,10 @@ router.post('/register', async (req, res) => {
         // 3. Create Pending User Record
         const otp = getGeneratedOtp();
         const pendingUser = await PendingUser.create({
-            name, email, password, mobile, country, city, profilePicture,
+            name,
+            // If email is empty string, store as undefined so sparse index works correctly
+            email: email && email.trim() !== '' ? email.trim().toLowerCase() : undefined,
+            password, mobile, country, city, profilePicture,
             preferredLanguage, referralCode, role: role || 'user',
             otp: otp
         });
@@ -108,7 +111,8 @@ router.post('/verify-otp', async (req, res) => {
                 // Create actual user (Permanent DB entry)
                 const user = await User.create({
                     name: pending.name,
-                    email: pending.email,
+                    // If email is empty string, store as undefined so sparse index works correctly
+                    email: pending.email && pending.email.trim() !== '' ? pending.email.trim().toLowerCase() : undefined,
                     password: pending.password,
                     role: pending.role,
                     mobile: pending.mobile,
