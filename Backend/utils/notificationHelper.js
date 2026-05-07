@@ -91,3 +91,33 @@ export const notifyAdmins = async (title, body, data = {}) => {
         console.error('Error notifying admins:', error);
     }
 };
+
+/**
+ * Send Notification to all Super Admins
+ */
+export const notifySuperAdmins = async (title, body, data = {}) => {
+    try {
+        const superAdmins = await User.find({ role: 'superadmin' });
+
+        for (const sa of superAdmins) {
+            await sendNotificationToUser(sa._id, title, body, data);
+        }
+    } catch (error) {
+        console.error('Error notifying super admins:', error);
+    }
+};
+
+/**
+ * Send Notification to ALL registered users
+ */
+export const notifyAllUsers = async (title, body, data = {}) => {
+    try {
+        const users = await User.find({ role: 'user' });
+
+        for (const user of users) {
+            await sendNotificationToUser(user._id, title, body, data);
+        }
+    } catch (error) {
+        console.error('Error notifying all users:', error);
+    }
+};

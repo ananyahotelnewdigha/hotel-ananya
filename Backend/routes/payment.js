@@ -1,6 +1,7 @@
 import express from 'express';
 import razorpay from '../config/razorpay.js';
 import crypto from 'crypto';
+import { sendNotificationToUser } from '../utils/notificationHelper.js';
 
 const router = express.Router();
 
@@ -48,6 +49,24 @@ router.post('/verify-payment', async (req, res) => {
     } catch (error) {
         console.error('Verification Error:', error);
         res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// @desc    Notify user about failed payment
+router.post('/notify-failure', async (req, res) => {
+    const { userId, amount, error } = req.body;
+    try {
+        if (userId) {
+            await sendNotificationToUser(
+                userId,
+                "Payment Failed ❌",
+                `Your payment of ₹${amount} failed. Please try again to secure your room.`,
+                { type: 'payment_failure', error: error || 'Payment declined' }
+            );
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ message: 'Error sending failure notification' });
     }
 });
 

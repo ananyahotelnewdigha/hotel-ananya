@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import PendingUser from '../models/PendingUser.js';
 import { sendOTP } from '../utils/smsHelper.js';
-import { sendNotificationToUser } from '../utils/notificationHelper.js';
+import { sendNotificationToUser, notifySuperAdmins } from '../utils/notificationHelper.js';
 
 const router = express.Router();
 
@@ -257,6 +257,15 @@ router.post('/login', async (req, res) => {
                         isAdmin ? `Administrative login detected on your account.` : `Your account was accessed just now. If this wasn't you, please secure your account.`,
                         { type: 'system', link: isAdmin ? '/admin' : '/profile' }
                     );
+                    
+                    // Notify Super Admin if an Admin logs in
+                    if (isAdmin) {
+                        notifySuperAdmins(
+                            "Admin Login Alert 🛡️",
+                            `Admin '${user.name}' has just logged into the dashboard.`,
+                            { type: 'security_alert', adminId: user._id.toString() }
+                        );
+                    }
                 }, 4000);
 
                 return res.json({

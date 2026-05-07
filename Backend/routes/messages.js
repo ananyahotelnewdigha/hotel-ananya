@@ -1,7 +1,7 @@
 import express from 'express';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
-import { notifyAdmins } from '../utils/notificationHelper.js';
+import { notifyAdmins, sendNotificationToUser } from '../utils/notificationHelper.js';
 
 const router = express.Router();
 
@@ -21,12 +21,33 @@ router.post('/', async (req, res) => {
         });
 
         if (newMessage) {
-            // PUSH NOTIFICATION: Admin (New Inquiry)
+            const isFeedback = subject?.toLowerCase() === 'feedback';
+            const notificationTitle = isFeedback ? "New Guest Feedback" : "New Guest Message";
+            const notificationBody = isFeedback 
+                ? `Valuable feedback received from ${firstName} ${lastName}.` 
+                : `New inquiry received from ${firstName} ${lastName} regarding ${subject}.`;
+
+            // PUSH NOTIFICATION: Admin
             await notifyAdmins(
-                "Guest Message",
-                `New inquiry received from ${firstName} ${lastName} regarding ${subject}.`,
-                { subject, from: email, type: 'inquiry' }
+                notificationTitle,
+                notificationBody,
+                { 
+                    subject, 
+                    from: email, 
+                    type: isFeedback ? 'feedback' : 'inquiry',
+                    messageId: newMessage._id.toString()
+                }
             );
+
+            // PUSH NOTIFICATION: User (Confirmation)
+            if (userId) {
+                await sendNotificationToUser(
+                    userId,
+                    "Message Received",
+                    `Thank you for your ${isFeedback ? 'feedback' : 'message'}. We will get back to you soon.`,
+                    { type: 'message_confirmation' }
+                );
+            }
         }
 
         res.status(201).json({ message: 'Message sent successfully', success: true, data: newMessage });

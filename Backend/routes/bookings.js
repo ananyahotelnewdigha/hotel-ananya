@@ -91,8 +91,9 @@ router.post('/', async (req, res) => {
 
         // 5. Update Inventory (Deduct availability)
         if (booking) {
+            let lowInventoryDate = null;
             for (const date of datesInRange) {
-                await Inventory.findOneAndUpdate(
+                const updatedInv = await Inventory.findOneAndUpdate(
                     { roomVariant: variant, date },
                     {
                         $inc: { bookedUnits: roomsCount },
@@ -100,13 +101,26 @@ router.post('/', async (req, res) => {
                     },
                     { upsert: true, new: true }
                 );
+
+                // If available rooms drop below 3, mark for alert
+                const available = (updatedInv.roomsToSell ?? variantDoc.totalRooms) - updatedInv.bookedUnits;
+                if (available < 3) lowInventoryDate = date;
             }
 
-            // PUSH NOTIFICATION: User (Booking Success)
+            // PUSH NOTIFICATION: Low Inventory Alert
+            if (lowInventoryDate) {
+                await notifyAdmins(
+                    "Low Inventory Alert! ⚠️",
+                    `Only few ${variantDoc.name} rooms left for ${new Date(lowInventoryDate).toLocaleDateString()}.`,
+                    { type: 'inventory_alert', date: lowInventoryDate.toISOString() }
+                );
+            }
+
+            // PUSH NOTIFICATION: User (Booking Success & Payment Success)
             await sendNotificationToUser(
                 userId,
-                "Stay Confirmed!",
-                `Your stay for ${checkIn} to ${checkOut} has been successfully booked.`,
+                "Stay Confirmed! ✅",
+                `Payment of ₹${totalPrice} received. Your stay from ${new Date(checkIn).toLocaleDateString()} to ${new Date(checkOut).toLocaleDateString()} is confirmed.`,
                 { bookingId: booking._id.toString(), type: 'booking' }
             );
 
@@ -180,13 +194,39 @@ router.put('/:id/status', async (req, res) => {
         const booking = await Booking.findByIdAndUpdate(req.params.id, { bookingStatus: newStatus }, { new: true });
 
         if (booking) {
+            let notificationTitle = "Booking Update";
+            let notificationBody = `Your booking #${booking.bookingId} status has been changed to ${newStatus}.`;
+
+            if (newStatus === 'cancelled') {
+                notificationTitle = "Booking Cancelled ❌";
+                notificationBody = `Your booking #${booking.bookingId} has been successfully cancelled.`;
+            } else if (newStatus === 'confirmed') {
+                notificationTitle = "Stay Confirmed! ✅";
+                notificationBody = `Your stay for ${booking.checkIn} is now confirmed. See you soon!`;
+            } else if (newStatus === 'checked-in') {
+                notificationTitle = "Welcome to Hotel Ananya! 🏨";
+                notificationBody = "We hope you have a wonderful stay with us. Let us know if you need anything!";
+            } else if (newStatus === 'checked-out') {
+                notificationTitle = "Thank You for Staying! ✨";
+                notificationBody = "It was a pleasure having you. We hope to see you again soon!";
+            }
+
             // PUSH NOTIFICATION: User (Update Status)
             await sendNotificationToUser(
                 booking.user,
-                "Booking Update",
-                `Your booking #${booking.bookingId} status has been changed to ${req.body.status}.`,
-                { bookingId: booking._id.toString(), status: req.body.status, type: 'status_update' }
+                notificationTitle,
+                notificationBody,
+                { bookingId: booking._id.toString(), status: newStatus, type: 'status_update' }
             );
+
+            // PUSH NOTIFICATION: Admin (Cancellation Alert)
+            if (newStatus === 'cancelled') {
+                await notifyAdmins(
+                    "Booking Cancelled",
+                    `Booking #${booking.bookingId} has been cancelled by the guest/system.`,
+                    { bookingId: booking._id.toString(), type: 'admin_alert' }
+                );
+            }
         }
         res.json(booking);
     } catch (error) {

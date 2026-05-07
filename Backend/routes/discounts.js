@@ -1,5 +1,6 @@
 import express from 'express';
 import Coupon from '../models/Coupon.js';
+import { notifyAllUsers } from '../utils/notificationHelper.js';
 
 const router = express.Router();
 
@@ -30,6 +31,16 @@ router.post('/', async (req, res) => {
     try {
         const { code, type, value } = req.body;
         const coupon = await Coupon.create({ code, type, value });
+        
+        if (coupon) {
+            // PUSH NOTIFICATION: All Users
+            notifyAllUsers(
+                "New Special Offer! 🎁",
+                `Use code ${code} to get ${value}${type === 'percentage' ? '%' : ' off'} on your next stay.`,
+                { type: 'offer', code: code }
+            );
+        }
+        
         res.status(201).json(coupon);
     } catch (error) {
         if (error.code === 11000) return res.status(400).json({ message: 'Coupon code already exists' });
