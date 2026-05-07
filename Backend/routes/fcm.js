@@ -16,31 +16,50 @@ router.post('/register', protect, async (req, res) => {
     const { token, platform } = req.body;
     const tokenStr = String(token || '').trim();
     const userId = req.user._id;
+    const userAgent = req.headers['user-agent'] || '';
 
     // Log basic registration attempt
-    console.log(`[FCM REGISTER ATTEMPT] User: ${req.user.email} | Platform Received: ${platform || 'NONE'} | Token start: ${tokenStr.substring(0, 10) || 'NULL'}`);
+    console.log(`[FCM REGISTER ATTEMPT] User: ${req.user.email} | Platform Received: ${platform || 'NONE'} | UA: ${userAgent.substring(0, 40)} | Token start: ${tokenStr.substring(0, 15) || 'NULL'}`);
 
     try {
         // FCM tokens are typically long strings without spaces
         if (!tokenStr || tokenStr.length < 50 || tokenStr.includes(' ')) {
-            console.warn(`[FCM REJECTED] Malformed or too short token for user ${req.user.email}`);
+            console.warn(`[FCM REJECTED - LENGTH] Token too short or has spaces. Length: ${tokenStr.length} | User: ${req.user.email}`);
             return res.status(400).json({ message: 'Valid token is required' });
         }
 
-        // Avoid saving Mock headers, JWT tokens, or literal null/undefined strings
-        const invalidStarts = ['eyJ', 'TEST_', 'mock_', 'null', 'undefined', 'Bearer '];
-        if (invalidStarts.some(start => tokenStr.startsWith(start)) || tokenStr.toLowerCase() === 'null') {
-            console.warn(`[FCM REJECTED] Invalid token format for user ${userId} (${tokenStr.substring(0, 10)}...).`);
+        // Avoid saving JWT tokens or literal null/undefined strings
+        // NOTE: Removed 'eyJ' from invalidStarts since some FCM tokens can start with it
+        const invalidStarts = ['TEST_', 'mock_', 'Bearer '];
+        const isLiteralNull = tokenStr.toLowerCase() === 'null' || tokenStr.toLowerCase() === 'undefined';
+        // Detect if this looks like a JWT (3 parts separated by dots, all base64)
+        const looksLikeJWT = tokenStr.split('.').length === 3 && tokenStr.startsWith('eyJ');
+
+        if (invalidStarts.some(start => tokenStr.startsWith(start)) || isLiteralNull || looksLikeJWT) {
+            console.warn(`[FCM REJECTED - FORMAT] Invalid token format for user ${req.user.email} (starts: ${tokenStr.substring(0, 10)}...). looksLikeJWT: ${looksLikeJWT}`);
             return res.status(400).json({ message: 'Invalid token format' });
         }
 
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // Ensure token exists in ONLY ONE field (prevents duplicate notifications)
-        // Broadened platform list (added 'flutter', 'dart')
+        // Determine platform: use provided value first, then auto-detect from User-Agent
         const mobilePlatforms = ['app', 'android', 'ios', 'mobile', 'flutter', 'dart'];
-        const isMobile = mobilePlatforms.includes(platform?.toLowerCase());
+        let detectedPlatform = platform?.toLowerCase();
+
+        if (!detectedPlatform || !mobilePlatforms.includes(detectedPlatform)) {
+            // Auto-detect from User-Agent if platform not explicitly set
+            const ua = userAgent.toLowerCase();
+            if (ua.includes('android') || ua.includes('flutter') || ua.includes('dart')) {
+                detectedPlatform = 'android';
+                console.log(`[FCM AUTO-DETECT] Detected mobile from User-Agent for user: ${req.user.email}`);
+            } else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ios')) {
+                detectedPlatform = 'ios';
+                console.log(`[FCM AUTO-DETECT] Detected iOS from User-Agent for user: ${req.user.email}`);
+            }
+        }
+
+        const isMobile = mobilePlatforms.includes(detectedPlatform);
 
         const field = isMobile ? 'fcmTokenMobile' : 'fcmTokens';
         const otherField = isMobile ? 'fcmTokens' : 'fcmTokenMobile';
