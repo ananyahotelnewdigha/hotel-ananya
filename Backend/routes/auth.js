@@ -91,10 +91,11 @@ router.post('/register', async (req, res) => {
 
         // 3. Create Pending User Record
         const otp = getGeneratedOtp();
+        // Only include email in the object if it's a real value (prevents null/empty in unique sparse index)
+        const cleanEmail = email && String(email).trim() !== '' ? String(email).trim().toLowerCase() : null;
         const pendingUser = await PendingUser.create({
             name,
-            // If email is empty string, store as undefined so sparse index works correctly
-            email: email && email.trim() !== '' ? email.trim().toLowerCase() : undefined,
+            ...(cleanEmail ? { email: cleanEmail } : {}),
             password, mobile, country, city, profilePicture,
             preferredLanguage, referralCode, role: role || 'user',
             otp: otp
@@ -131,10 +132,11 @@ router.post('/verify-otp', async (req, res) => {
             // Flow: Finalize Registration
             if (pending.otp === otp) {
                 // Create actual user (Permanent DB entry)
+                // Only include email if it's a real value (prevents null in unique sparse index)
+                const pendingCleanEmail = pending.email && String(pending.email).trim() !== '' ? String(pending.email).trim().toLowerCase() : null;
                 const user = await User.create({
                     name: pending.name,
-                    // If email is empty string, store as undefined so sparse index works correctly
-                    email: pending.email && pending.email.trim() !== '' ? pending.email.trim().toLowerCase() : undefined,
+                    ...(pendingCleanEmail ? { email: pendingCleanEmail } : {}),
                     password: pending.password,
                     role: pending.role,
                     mobile: pending.mobile,
