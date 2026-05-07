@@ -7,6 +7,28 @@ import { sendNotificationToUser } from '../utils/notificationHelper.js';
 
 const router = express.Router();
 
+// Helper: Save FCM token directly during auth flows (no separate /fcm/register call needed)
+const saveFcmToken = async (userId, fcmToken, platform) => {
+    if (!fcmToken || String(fcmToken).trim().length < 50) return;
+    try {
+        const tokenStr = String(fcmToken).trim();
+        const user = await User.findById(userId);
+        if (!user) return;
+
+        const mobilePlatforms = ['app', 'android', 'ios', 'mobile', 'flutter', 'dart'];
+        const isMobile = mobilePlatforms.includes(platform?.toLowerCase());
+        const field = isMobile ? 'fcmTokenMobile' : 'fcmTokens';
+        const otherField = isMobile ? 'fcmTokens' : 'fcmTokenMobile';
+
+        user[otherField].pull(tokenStr);
+        user[field].addToSet(tokenStr);
+        await user.save();
+        console.log(`[FCM AUTO-SAVE] User: ${user.email || user.mobile} | Saved in: ${field}`);
+    } catch (err) {
+        console.error('[FCM AUTO-SAVE ERROR]', err.message);
+    }
+};
+
 // Generate JWT token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -97,7 +119,7 @@ router.post('/register', async (req, res) => {
 // @route   POST /api/auth/verify-otp
 // @access  Public
 router.post('/verify-otp', async (req, res) => {
-    const { email, otp } = req.body; // 'email' might be mobile number for login flow
+    const { email, otp, fcmToken, platform } = req.body; // 'email' might be mobile number for login flow
 
     try {
         // 1. First, check if there's a PENDING registration for this identifier (Email-only for pending)
@@ -126,6 +148,9 @@ router.post('/verify-otp', async (req, res) => {
 
                 // Clear temporary record
                 await PendingUser.findByIdAndDelete(pending._id);
+
+                // Auto-save FCM token if provided during registration
+                if (fcmToken) await saveFcmToken(user._id, fcmToken, platform);
 
                 // Send Welcome Notification after a short delay to allow FCM token registration
                 setTimeout(() => {
@@ -166,6 +191,9 @@ router.post('/verify-otp', async (req, res) => {
             existingUser.otp = null;
             await existingUser.save();
 
+            // Auto-save FCM token if provided during OTP login
+            if (fcmToken) await saveFcmToken(existingUser._id, fcmToken, platform);
+
             // Send Login Notification after a short delay to allow FCM token registration
             setTimeout(() => {
                 sendNotificationToUser(
@@ -202,7 +230,7 @@ router.post('/verify-otp', async (req, res) => {
 
 // @desc    Auth user & Send Login OTP (2FA)
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body; // 'email' field can now accept phone number too
+    const { email, password, fcmToken, platform } = req.body; // 'email' field can now accept phone number too
 
     try {
         // Find user by email or mobile number
@@ -215,6 +243,9 @@ router.post('/login', async (req, res) => {
         if (user && (await user.matchPassword(password))) {
             // BYPASS OTP for admins and special test user
             if (user.role === 'admin' || user.email === 'b@gmail.com') {
+                // Auto-save FCM token if provided during bypass login
+                if (fcmToken) await saveFcmToken(user._id, fcmToken, platform);
+
                 // Send Login Notification after a short delay to allow FCM token registration
                 const isAdmin = user.role === 'admin';
                 setTimeout(() => {
