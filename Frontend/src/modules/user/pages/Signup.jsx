@@ -265,7 +265,7 @@ const Signup = () => {
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Mail size={10} className="text-primary" /> Email Address (Optional)
+                                <Mail size={10} className="text-primary" /> Email Address
                             </label>
                             <input type="email" name="email" value={formData.email} onChange={handleChange}
                                 placeholder="you@example.com"
