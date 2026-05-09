@@ -23,7 +23,7 @@ const ServiceMgmt = () => {
     const addSubItem = () => {
         setFormData(prev => ({
             ...prev,
-            items: [...prev.items, { name: '', price: 0, description: '' }]
+            items: [...prev.items, { name: '', price: 0, description: '', images: [] }]
         }));
     };
 
@@ -38,6 +38,23 @@ const ServiceMgmt = () => {
             ...prev,
             items: prev.items.filter((_, i) => i !== index)
         }));
+    };
+
+    const handleItemImageUpload = async (index, e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        const data = new FormData();
+        files.forEach(file => data.append('images', file));
+
+        try {
+            const res = await api.post('/media/upload-multiple', data);
+            const currentImages = formData.items[index].images || [];
+            updateSubItem(index, 'images', [...currentImages, ...res.data.imageUrls]);
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Image upload failed');
+        }
     };
 
     const [uploading, setUploading] = useState(false);
@@ -263,10 +280,11 @@ const ServiceMgmt = () => {
                                         min="0"
                                         placeholder="0"
                                         className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-xs font-bold outline-none"
-                                        value={formData.price}
+                                        value={formData.price === 0 ? '' : formData.price}
+                                        onKeyDown={e => { if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault(); }}
                                         onChange={e => {
-                                            const val = parseFloat(e.target.value);
-                                            setFormData({ ...formData, price: val < 0 ? 0 : e.target.value });
+                                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                            setFormData({ ...formData, price: val < 0 ? 0 : val });
                                         }}
                                     />
                                 </div>
@@ -362,10 +380,15 @@ const ServiceMgmt = () => {
                                                     />
                                                     <input
                                                         type="number"
-                                                        placeholder="Price"
+                                                        min="0"
+                                                        placeholder="0"
                                                         className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-[10px] font-bold outline-none"
-                                                        value={item.price || 0}
-                                                        onChange={e => updateSubItem(idx, 'price', e.target.value)}
+                                                        value={item.price === 0 ? '' : item.price}
+                                                        onKeyDown={e => { if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault(); }}
+                                                        onChange={e => {
+                                                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                                            updateSubItem(idx, 'price', val < 0 ? 0 : val);
+                                                        }}
                                                     />
                                                 </div>
                                                 <input
@@ -374,6 +397,38 @@ const ServiceMgmt = () => {
                                                     value={item.description || ''}
                                                     onChange={e => updateSubItem(idx, 'description', e.target.value)}
                                                 />
+                                                
+                                                {/* Multi-Image Upload for Item */}
+                                                <div className="space-y-2">
+                                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Images</label>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {item.images && item.images.map((img, imgIdx) => (
+                                                            <div key={imgIdx} className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200">
+                                                                <img src={img} className="w-full h-full object-cover" alt="Item" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const newImages = item.images.filter((_, i) => i !== imgIdx);
+                                                                        updateSubItem(idx, 'images', newImages);
+                                                                    }}
+                                                                    className="absolute top-0 right-0 p-0.5 bg-rose-500 text-white rounded-bl-lg"
+                                                                >
+                                                                    <X size={10} />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                        <label className="w-12 h-12 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                                                            <Plus size={14} className="text-slate-400" />
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                multiple
+                                                                className="hidden"
+                                                                onChange={e => handleItemImageUpload(idx, e)}
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))
                                     )}

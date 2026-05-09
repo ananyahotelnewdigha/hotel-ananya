@@ -31,7 +31,8 @@ const serviceSchema = new mongoose.Schema({
     items: [{
         name: String,
         price: Number,
-        description: String
+        description: String,
+        images: [{ type: String }]
     }]
 }, { timestamps: true });
 

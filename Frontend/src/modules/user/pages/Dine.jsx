@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
-import { Coffee, Info, Tag } from 'lucide-react';
+import { Coffee, Info, Tag, X } from 'lucide-react';
 
 const Dine = () => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchDine = async () => {
@@ -80,12 +81,21 @@ const Dine = () => {
                                     {item.items && item.items.length > 0 && (
                                         <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
                                             {item.items.map((sub, i) => (
-                                                <div key={i} className="flex justify-between items-center group/item">
-                                                    <div className="text-left">
-                                                        <p className="text-xs font-black text-secondary uppercase tracking-tighter">{sub.name}</p>
-                                                        {sub.description && <p className="text-[10px] text-slate-400 italic">{sub.description}</p>}
+                                                <div key={i} className="flex gap-4 items-start group/item">
+                                                    {sub.images && sub.images.length > 0 && (
+                                                        <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[150px] py-1">
+                                                            {sub.images.map((img, imgIdx) => (
+                                                                <div key={imgIdx} className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100 shadow-sm cursor-pointer" onClick={() => setSelectedImage(img)}>
+                                                                    <img src={img} className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-500" alt={sub.name} />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    <div className="text-left flex-1 min-w-0">
+                                                        <p className="text-xs font-black text-secondary uppercase tracking-tighter truncate">{sub.name}</p>
+                                                        {sub.description && <p className="text-[10px] text-slate-400 italic line-clamp-2">{sub.description}</p>}
                                                     </div>
-                                                    <span className="text-xs font-black text-primary group-hover/item:scale-110 transition-transform">₹{sub.price}</span>
+                                                    <span className="text-xs font-black text-primary group-hover/item:scale-110 transition-transform shrink-0">₹{sub.price}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -96,6 +106,19 @@ const Dine = () => {
                     </div>
                 )}
             </div>
+
+            {/* Image Modal */}
+            {selectedImage && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-secondary/80 backdrop-blur-md" onClick={() => setSelectedImage(null)} />
+                    <div className="bg-white rounded-[2rem] overflow-hidden relative z-10 animate-in zoom-in-95 shadow-2xl max-w-3xl max-h-[90vh]">
+                        <button onClick={() => setSelectedImage(null)} className="absolute right-6 top-6 text-white hover:text-secondary p-2 bg-black/50 rounded-lg">
+                            <X size={20} />
+                        </button>
+                        <img src={selectedImage} className="w-full h-full object-contain" alt="Preview" />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

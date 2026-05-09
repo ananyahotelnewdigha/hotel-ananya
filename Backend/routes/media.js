@@ -19,6 +19,24 @@ router.post('/upload-single', upload.single('image'), async (req, res) => {
     }
 });
 
+// Upload multiple files and return URLs
+router.post('/upload-multiple', upload.array('images', 5), async (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ message: 'No images uploaded' });
+        }
+
+        const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer, 'services'));
+        const results = await Promise.all(uploadPromises);
+        
+        const imageUrls = results.map(result => result.secure_url);
+        res.json({ imageUrls });
+    } catch (error) {
+        console.error('Multi Upload Error:', error);
+        res.status(500).json({ message: 'Error uploading images', details: error.message });
+    }
+});
+
 // Get all media of a specific type
 router.get('/:type', async (req, res) => {
     try {
