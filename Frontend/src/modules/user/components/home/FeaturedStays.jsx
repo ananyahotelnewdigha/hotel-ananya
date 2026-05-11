@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Heart, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { roomCategories } from '../../../../utils/roomData';
 import { useAuth } from '../../../../context/AuthContext';
+import api from '../../../../services/api';
 
 const FeaturedStays = () => {
     const navigate = useNavigate();
     const { user, wishlist, toggleWishlist } = useAuth();
     const isBlocked = user?.status === 'blocked';
+    const [rooms, setRooms] = useState(roomCategories);
+
+    useEffect(() => {
+        const fetchRooms = async () => {
+            try {
+                const { data } = await api.get('/rooms');
+                if (data && data.length > 0) {
+                    setRooms(data);
+                }
+            } catch (error) {
+                console.error('Error fetching rooms for featured stays:', error);
+            }
+        };
+        fetchRooms();
+    }, []);
 
     const handleToggleLike = (e, index) => {
         e.stopPropagation();
@@ -28,9 +44,9 @@ const FeaturedStays = () => {
 
     const handleShare = (room) => {
         const shareData = {
-            title: `Hotel Ananya - ${room.type}`,
-            text: `Check out this amazing ${room.type} at Hotel Ananya!`,
-            url: window.location.origin + '/rooms?type=' + encodeURIComponent(room.type)
+            title: `Hotel Ananya - ${room.name || room.type}`,
+            text: `Check out this amazing ${room.name || room.type} at Hotel Ananya!`,
+            url: window.location.origin + '/rooms?type=' + encodeURIComponent(room.name || room.type)
         };
 
         if (navigator.share) {
@@ -50,15 +66,15 @@ const FeaturedStays = () => {
                 </button>
             </div>
             <div className="flex overflow-x-auto px-4 pb-4 space-x-3 no-scrollbar snap-x">
-                {roomCategories.map((room, i) => (
+                {rooms.map((room, i) => (
                     <div
                         key={i}
-                        onClick={() => !isBlocked && navigate('/rooms', { state: { initialSearch: room.type } })}
+                        onClick={() => !isBlocked && navigate('/rooms', { state: { initialSearch: room.name || room.type } })}
                         className={`flex-shrink-0 w-[75vw] bg-white rounded-xl border border-slate-100 shadow-md overflow-hidden snap-center group transition-all
                             ${isBlocked ? 'opacity-70 cursor-not-allowed grayscale-[0.3]' : 'active:scale-95 cursor-pointer'}`}
                     >
                         <div className="relative h-40 overflow-hidden">
-                            <img src={room.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={room.type} />
+                            <img src={room.images?.[0] || room.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={room.name || room.type} />
 
                             {/* Action Cluster */}
                             <div className="absolute top-3 right-3 flex flex-col gap-2">
@@ -86,12 +102,12 @@ const FeaturedStays = () => {
                             </div>
                         </div>
                         <div className="p-4 space-y-2">
-                            <h4 className="text-sm font-bold text-secondary truncate uppercase tracking-tight">{room.type}</h4>
+                            <h4 className="text-sm font-bold text-secondary truncate uppercase tracking-tight">{room.name || room.type}</h4>
                             <div className="flex items-center justify-between">
-                                <p className="text-primary font-bold text-lg">₹{room.price}<span className="text-[8px] text-slate-400 font-normal uppercase ml-1">/ Night</span></p>
+                                <p className="text-primary font-bold text-lg">₹{room.startingPrice || room.price}<span className="text-[8px] text-slate-400 font-normal uppercase ml-1">/ Night</span></p>
                                 {!isBlocked ? (
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); navigate('/rooms', { state: { initialSearch: room.type } }); }}
+                                        onClick={(e) => { e.stopPropagation(); navigate('/rooms', { state: { initialSearch: room.name || room.type } }); }}
                                         className="bg-secondary text-white text-[8px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest active:scale-90 transition-all shadow-sm"
                                     >
                                         Book
