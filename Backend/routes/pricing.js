@@ -67,7 +67,7 @@ router.post('/', async (req, res) => {
         const plan = await Pricing.create(req.body);
         res.status(201).json(plan);
     } catch (error) {
-        res.status(500).json({ message: 'Error creating pricing plan' });
+        res.status(500).json({ message: 'Error creating pricing plan', error: error.message });
     }
 });
 
@@ -76,7 +76,7 @@ router.put('/:id', async (req, res) => {
         const plan = await Pricing.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(plan);
     } catch (error) {
-        res.status(500).json({ message: 'Error updating pricing plan' });
+        res.status(500).json({ message: 'Error updating pricing plan', error: error.message });
     }
 });
 

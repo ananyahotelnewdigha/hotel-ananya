@@ -135,7 +135,7 @@ const PricingMgmt = () => {
             fetchData();
         } catch (error) {
             console.error('Submission Error:', error.response?.data || error.message);
-            alert('Operation failed. Please check all fields.');
+            alert('Operation failed: ' + (error.response?.data?.error || 'Please check all fields.'));
         }
     };
 

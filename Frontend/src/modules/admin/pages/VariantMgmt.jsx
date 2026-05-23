@@ -90,7 +90,8 @@ const VariantMgmt = () => {
             setIsModalOpen(false);
             fetchData();
         } catch (err) {
-            alert('Operation failed. Check all fields.');
+            console.error('Submission Error:', err.response?.data || err.message);
+            alert('Operation failed: ' + (err.response?.data?.error || err.response?.data?.message || 'Check all fields.'));
         }
     };
 

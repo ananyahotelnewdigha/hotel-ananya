@@ -287,7 +287,7 @@ const BookingFlow = () => {
 
         try {
             const { data: order } = await api.post('/payments/create-order', {
-                amount: Math.round(grandTotal),
+                amount: Math.round(amountToPayNow),
                 receipt: bookingId
             });
 
@@ -850,9 +850,17 @@ const BookingFlow = () => {
                                     <span className="text-[10px] font-bold text-secondary">{nights(dates.checkIn, dates.checkOut)} Night{nights(dates.checkIn, dates.checkOut) > 1 ? 's' : ''}</span>
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Net Valuation</span>
-                                <span className="text-[16px] font-bold text-emerald-700 tracking-tight">₹{grandTotal.toLocaleString()}</span>
+                                <span className="text-[14px] font-bold text-secondary tracking-tight">₹{grandTotal.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Amount Paid</span>
+                                <span className="text-[14px] font-bold text-emerald-600 tracking-tight">₹{amountToPayNow.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Due At Hotel</span>
+                                <span className="text-[16px] font-bold text-amber-600 tracking-tight">₹{(grandTotal - amountToPayNow).toLocaleString()}</span>
                             </div>
                         </div>
 
@@ -946,9 +954,17 @@ const BookingFlow = () => {
                                     pols.forEach(pLine => { pdf.text(pLine, 25, y); y += 5; });
 
                                     y = 230;
-                                    pdf.setFillColor(15, 23, 42); pdf.roundedRect(20, y, w - 40, 25, 3, 3, 'F');
-                                    pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.text('TOTAL VALUATION (INCLUSIVE OF TAXES)', 28, y + 9);
-                                    pdf.setFontSize(16); pdf.setTextColor(16, 185, 129); pdf.text(`INR ${grandTotal.toLocaleString()}`, 28, y + 18);
+                                    pdf.setFillColor(15, 23, 42); pdf.roundedRect(20, y, w - 40, 28, 3, 3, 'F');
+                                    
+                                    pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.text('TOTAL VALUATION', 28, y + 9);
+                                    pdf.setFontSize(12); pdf.setTextColor(255, 255, 255); pdf.text(`INR ${grandTotal.toLocaleString()}`, 28, y + 15);
+
+                                    pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.text('AMOUNT PAID', 85, y + 9);
+                                    pdf.setFontSize(12); pdf.setTextColor(16, 185, 129); pdf.text(`INR ${amountToPayNow.toLocaleString()}`, 85, y + 15);
+
+                                    pdf.setFontSize(7); pdf.setTextColor(148, 163, 184); pdf.text('DUE AT HOTEL', 140, y + 9);
+                                    pdf.setFontSize(12); pdf.setTextColor(245, 158, 11); pdf.text(`INR ${(grandTotal - amountToPayNow).toLocaleString()}`, 140, y + 15);
+
                                     pdf.setFontSize(8); pdf.setTextColor(148, 163, 184); pdf.text('OFFICIAL RECEIPT', w - 28, y + 18, { align: 'right' });
 
                                     y += 35; pdf.setDrawColor(226, 232, 240); pdf.line(20, y, 70, y);

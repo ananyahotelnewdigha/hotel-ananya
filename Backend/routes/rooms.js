@@ -64,19 +64,27 @@ router.get('/categories', async (req, res) => {
     try {
         const roomTypes = await RoomType.find({ isActive: true });
         const enriched = await Promise.all(roomTypes.map(async (type) => {
-            const variant = await RoomVariant.findOne({ roomType: type._id });
-            const minPlan = variant ? await Pricing.findOne({ roomVariant: variant._id }).sort({ adult2Price: 1 }) : null;
+            const variants = await RoomVariant.find({ roomType: type._id });
+            let minPrice = Infinity;
+            for (const v of variants) {
+                const minPlan = await Pricing.findOne({ roomVariant: v._id }).sort({ adult2Price: 1 });
+                if (minPlan && minPlan.adult2Price < minPrice) {
+                    minPrice = minPlan.adult2Price;
+                }
+            }
+            const finalPrice = minPrice === Infinity ? 0 : minPrice;
+            
             return {
                 _id: type._id,
                 type: type.name,
                 size: type.size,
                 bed: type.bedType,
                 capacity: type.capacity,
-                price: minPlan ? minPlan.adult2Price : 0,
+                price: finalPrice,
                 amenities: type.amenities,
                 image: type.images[0],
                 count: type.totalRooms,
-                startingPrice: minPlan ? minPlan.adult2Price : 0,
+                startingPrice: finalPrice,
                 images: type.images,
                 name: type.name
             };
@@ -145,7 +153,7 @@ router.post('/variants-with-pricing', async (req, res) => {
                             roomDetails.forEach(room => {
                                 if (room.adults === 1) currentTotal += dp.adult1;
                                 else if (room.adults === 2) currentTotal += dp.adult2;
-                                else currentTotal += (dp.adult2 + dp.extraAdult);
+                                else currentTotal += (dp.adult2 + (room.adults - 2) * dp.extraAdult);
                                 currentTotal += (room.children * dp.child);
                             });
                         } else {
@@ -246,7 +254,7 @@ router.post('/variants', async (req, res) => {
         const variant = await RoomVariant.create(req.body);
         res.status(201).json(variant);
     } catch (error) {
-        res.status(500).json({ message: 'Error creating variant' });
+        res.status(500).json({ message: 'Error creating variant', error: error.message });
     }
 });
 
@@ -256,7 +264,7 @@ router.put('/variants/:id', async (req, res) => {
         const variant = await RoomVariant.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(variant);
     } catch (error) {
-        res.status(500).json({ message: 'Error updating variant' });
+        res.status(500).json({ message: 'Error updating variant', error: error.message });
     }
 });
 
