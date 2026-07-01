@@ -156,33 +156,45 @@ const Bookings = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <p className="text-[10px] font-bold text-secondary">{new Date(bk.createdAt).toLocaleDateString('en-GB')}</p>
-                                            <p className="text-[7px] text-slate-400 uppercase tracking-widest leading-none mt-1">Ref: {bk.bookingId}</p>
+                                            <p className="text-xs font-bold text-secondary">{new Date(bk.createdAt).toLocaleDateString('en-GB')}</p>
+                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1 whitespace-nowrap">Ref: {bk.bookingId}</p>
                                         </td>
                                         <td className="px-6 py-4">
                                             <p className="font-bold text-secondary uppercase tracking-tight leading-none">{bk.roomType?.name}</p>
-                                            <p className="text-[8px] text-slate-400 uppercase tracking-widest mt-1 italic">{bk.variant?.name}</p>
+                                            {bk.variant?.name && bk.variant.name !== bk.roomType?.name && (
+                                                <p className="text-[8px] text-slate-400 uppercase tracking-widest mt-1 italic">{bk.variant.name}</p>
+                                            )}
+                                            {bk.plan?.planName && (
+                                                <p className="text-[8px] text-primary uppercase tracking-widest mt-1 font-bold">{bk.plan.planName}</p>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <div className="flex items-center justify-center gap-3">
-                                                <div className="text-center">
-                                                    <span className="text-[8px] font-bold text-slate-400 block uppercase">In</span>
-                                                    <span className="font-bold text-secondary whitespace-nowrap">{new Date(bk.checkIn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <div className="text-center">
+                                                        <span className="text-[8px] font-bold text-slate-400 block uppercase">In</span>
+                                                        <span className="font-bold text-secondary whitespace-nowrap">{new Date(bk.checkIn).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                                                    </div>
+                                                    <div className="h-4 w-[1px] bg-slate-200 rotate-[30deg]" />
+                                                    <div className="text-center">
+                                                        <span className="text-[8px] font-bold text-slate-400 block uppercase">Out</span>
+                                                        <span className="font-bold text-secondary whitespace-nowrap">{new Date(bk.checkOut).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="h-4 w-[1px] bg-slate-200 rotate-[30deg]" />
-                                                <div className="text-center">
-                                                    <span className="text-[8px] font-bold text-slate-400 block uppercase">Out</span>
-                                                    <span className="font-bold text-secondary whitespace-nowrap">{new Date(bk.checkOut).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
+                                                <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-sm border border-slate-100">
+                                                    {bk.roomsCount} Room{bk.roomsCount > 1 ? 's' : ''}
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm border ${bk.paymentStatus === 'paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                bk.paymentStatus === 'partial' ? 'text-amber-50 text-amber-600 border-amber-100' : 'bg-rose-50 text-rose-600 border-rose-100'
+                                            <span className={`inline-block text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-sm border ${bk.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                                bk.paymentStatus === 'partial' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-rose-100 text-rose-700 border-rose-200'
                                                 }`}>
                                                 {bk.paymentStatus}
                                             </span>
-                                            <p className="text-[7px] font-bold text-slate-400 mt-1 uppercase tracking-tighter tabular-nums">₹{bk.totalPrice?.toLocaleString()}</p>
+                                            <p className="text-[10px] font-bold text-slate-500 mt-1.5 uppercase tracking-tight tabular-nums">
+                                                ₹{bk.totalPrice?.toLocaleString()}
+                                            </p>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end items-center gap-2">
